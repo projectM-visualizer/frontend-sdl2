@@ -1,0 +1,45 @@
+
+logging.loggers.root.level = debug
+
+# Application window settings
+
+# If set to true, the application will start in fullscreen mode
+window.fullscreen = true
+
+# Set the monitor to initially display the window on.
+# 0 will use system defaults for placement, 1 and above select a specific monitor.
+# If the number is too large, that last available monitor is used.
+window.monitor = 0
+
+# Two fullscreen modes are supported:
+# - windowed: Uses a borderless window, filling the current monitor.
+#             Does not change the current resolution.
+# - exclusive: Sets the resolution to window.fullscreen.width/height and runs in exclusive mode,
+#              like a game.
+window.fullscreen.exclusiveMode = false
+
+# Only used if fullscreen mode is "exclusive"
+# If any value is set to 0, the nearest available fullscreen resolution for the current window size is used.
+window.fullscreen.width = 0
+window.fullscreen.height = 0
+
+# Window size if not in fullscreen
+window.width = 800
+window.height = 600
+
+# Wait for vertical sync interval before displaying the next frame.
+# This will limit max FPS to the vertical sync frequency but prevent tearing.
+window.waitForVerticalSync = true
+
+### projectM settings
+# Target FPS, usually 60.
+projectM.fps = 60
+# Render mesh size. This is the grid in which "per-pixel" code is executed, once per cell.
+projectM.meshX = 200
+projectM.meshY = 125
+
+# Transition time in seconds for soft cuts
+projectM.transitionDuration = 3
+
+# Path where projectMSDL will search for presets and textures. The directory will be searched recursively.
+projectM.presetPath = @DEFAULT_PRESET_PATH@

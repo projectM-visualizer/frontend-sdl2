@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Poco/Util/Application.h>
+#include <Poco/Util/MapConfiguration.h>
 
 class ProjectMSDLApplication : public Poco::Util::Application
 {
@@ -17,6 +18,11 @@ protected:
     void defineOptions(Poco::Util::OptionSet& options) override;
 
     int main(const std::vector<std::string>& args) override;
+
+    void DisplayHelp(const std::string& name, const std::string& value);
+
+    Poco::Util::MapConfiguration::Ptr _commandLineOverrides{
+        Poco::makeAuto<Poco::Util::MapConfiguration>() }; //!< Map configuration with overrides set by command line arguments.
 };
 
 

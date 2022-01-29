@@ -1,3 +1,6 @@
+
+configure_file(resources/projectMSDL.properties.in ${CMAKE_CURRENT_BINARY_DIR}/projectMSDL.properties @ONLY)
+
 add_executable(projectMSDL
         AudioCapture.cpp
         AudioCapture.h
@@ -5,10 +8,14 @@ add_executable(projectMSDL
         AudioCaptureImpl_SDL.h
         AudioCaptureImpl_WASAPI.cpp
         AudioCaptureImpl_WASAPI.h
+        FPSLimiter.cpp
+        FPSLimiter.h
         ProjectMSDLApplication.cpp
         ProjectMSDLApplication.h
         ProjectMWrapper.cpp
         ProjectMWrapper.h
+        RenderLoop.cpp
+        RenderLoop.h
         SDLRenderingWindow.h
         SDLRenderingWindow.cpp
         )
@@ -35,6 +42,11 @@ else()
             )
 endif()
 
+target_compile_definitions(projectMSDL
+        PRIVATE
+        PROJECTMSDL_VERSION="${PROJECT_VERSION}"
+        LIBPROJECTM_BUILD_VERSION="${libprojectM_VERSION}"
+        )
 
 target_link_libraries(projectMSDL
         PRIVATE
