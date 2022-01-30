@@ -30,6 +30,12 @@ public:
     void GetDrawableSize(int& width, int& height) const;
 
     /**
+     * @brief Sets the window title.
+     * @param title The new window title.
+     */
+    void SetTitle(const std::string& title) const;
+
+    /**
      * Swaps the OpenGL front- and back buffers.
      */
     void Swap() const;

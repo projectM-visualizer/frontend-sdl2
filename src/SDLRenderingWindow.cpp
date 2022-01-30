@@ -34,6 +34,11 @@ void SDLRenderingWindow::GetDrawableSize(int& width, int& height) const
     SDL_GL_GetDrawableSize(_renderingWindow, &width, &height);
 }
 
+void SDLRenderingWindow::SetTitle(const std::string& title) const
+{
+    SDL_SetWindowTitle(_renderingWindow, title.c_str());
+}
+
 void SDLRenderingWindow::Swap() const
 {
     SDL_GL_SwapWindow(_renderingWindow);

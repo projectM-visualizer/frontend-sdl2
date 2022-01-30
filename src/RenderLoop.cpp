@@ -19,6 +19,16 @@ void RenderLoop::Run()
     FPSLimiter limiter;
     limiter.TargetFPS(_projectMWrapper.TargetFPS());
 
+    projectm_set_preset_switched_event_callback(_projectMHandle, &RenderLoop::PresetSwitchedEvent,
+                                                static_cast<void*>(this));
+
+    // Update title bar with initial preset.
+    unsigned int currentIndex;
+    if (projectm_get_selected_preset_index(_projectMHandle, &currentIndex))
+    {
+        PresetSwitchedEvent(true, currentIndex, this);
+    }
+
     while (!_wantsToQuit)
     {
         limiter.StartFrame();
@@ -27,6 +37,8 @@ void RenderLoop::Run()
         _sdlRenderingWindow.Swap();
         limiter.EndFrame();
     }
+
+    projectm_set_preset_switched_event_callback(_projectMHandle, nullptr, nullptr);
 }
 
 void RenderLoop::PollEvents()
@@ -331,7 +343,7 @@ void RenderLoop::ScrollEvent(const SDL_MouseWheelEvent& event)
     {
         projectm_select_previous_preset(_projectMHandle, true);
     }
-    // Wheel down is negative
+        // Wheel down is negative
     else if (event.y < 0)
     {
         projectm_select_next_preset(_projectMHandle, true);
@@ -385,4 +397,16 @@ void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
     {
         _mouseDown = false;
     }
+}
+
+void RenderLoop::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context)
+{
+    auto that = reinterpret_cast<RenderLoop*>(context);
+    auto presetName = projectm_get_preset_name(that->_projectMHandle, index);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);
+
+    std::string newTitle = "projectM ➫ " + std::string(presetName);
+    projectm_free_string(presetName);
+
+    that->_sdlRenderingWindow.SetTitle(newTitle);
 }

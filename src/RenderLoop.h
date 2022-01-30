@@ -49,6 +49,14 @@ protected:
      */
     void MouseUpEvent(const SDL_MouseButtonEvent& event);
 
+    /**
+     * @brief projectM callback. Called whenever a preset is switched.
+     * @param isHardCut True if the switch was a hard cut.
+     * @param index New preset playlist index.
+     * @param context Callback context, e.g. "this" pointer.
+     */
+    static void PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context);
+
     AudioCapture& _audioCapture;
     ProjectMWrapper& _projectMWrapper;
     SDLRenderingWindow& _sdlRenderingWindow;
