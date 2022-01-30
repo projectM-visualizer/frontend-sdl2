@@ -56,9 +56,24 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                           .callback(
                               OptionCallback<ProjectMSDLApplication>(this, &ProjectMSDLApplication::DisplayHelp)));
 
+    options.addOption(Option("listAudioDevices", "l",
+                             "Output a list of available audio recording devices on startup.")
+                          .callback(
+                              OptionCallback<ProjectMSDLApplication>(this, &ProjectMSDLApplication::ListAudioDevices)));
+
+    options.addOption(Option("audioDevice", "d",
+                             "Select an audio device to record from initially. Can be the numerical ID or the full device name. "
+                             "If the device is not found, the default device will be used instead.",
+                             false, "<id or name>", true)
+                          .binding("audio.device", _commandLineOverrides));
+
     options.addOption(Option("presetPath", "p", "Base directory to search for presets.",
                              false, "<path>", true)
                           .binding("projectM.presetPath", _commandLineOverrides));
+
+    options.addOption(Option("enableSplash", "s", "If true, initially displays the built-in projectM logo preset.",
+                             false, "<0/1>", true)
+                          .binding("projectM.enableSplash", _commandLineOverrides));
 
     options.addOption(Option("fullscreen", "f", "Start in fullscreen mode.",
                              false, "<0/1>", true)
@@ -108,16 +123,15 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                           .binding("projectM.fps", _commandLineOverrides));
 }
 
-int ProjectMSDLApplication::main(const std::vector<std::string>& args)
+int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)
 {
     RenderLoop renderLoop;
-
     renderLoop.Run();
 
     return EXIT_SUCCESS;
 }
 
-void ProjectMSDLApplication::DisplayHelp(const std::string& name, const std::string& value)
+void ProjectMSDLApplication::DisplayHelp(POCO_UNUSED const std::string& name, POCO_UNUSED const std::string& value)
 {
     Poco::Util::HelpFormatter formatter(options());
 
@@ -144,6 +158,11 @@ Built against SDL version: %?d.%?d.%?d (running with %?d.%?d.%?d))",
     formatter.format(std::cerr);
 
     exit(EXIT_SUCCESS);
+}
+
+void ProjectMSDLApplication::ListAudioDevices(POCO_UNUSED const std::string& name, POCO_UNUSED const std::string& value)
+{
+    _commandLineOverrides->setBool("audio.listDevices", true);
 }
 
 POCO_APP_MAIN(ProjectMSDLApplication)

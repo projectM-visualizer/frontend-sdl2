@@ -19,7 +19,14 @@ protected:
 
     int main(const std::vector<std::string>& args) override;
 
+    /**
+     * @brief Display help and exit.
+     * @param name Unused.
+     * @param value Unused.
+     */
     void DisplayHelp(const std::string& name, const std::string& value);
+
+    void ListAudioDevices(const std::string& name, const std::string& value);
 
     Poco::Util::MapConfiguration::Ptr _commandLineOverrides{
         Poco::makeAuto<Poco::Util::MapConfiguration>() }; //!< Map configuration with overrides set by command line arguments.

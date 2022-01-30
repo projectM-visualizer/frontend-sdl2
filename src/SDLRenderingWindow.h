@@ -14,6 +14,10 @@ class SDLRenderingWindow : public Poco::Util::Subsystem
 public:
     const char* name() const override;
 
+    void initialize(Poco::Util::Application& app) override;
+
+    void uninitialize() override;
+
     /**
      * @brief Retrieves the current drawable size of the rendering window.
      *
@@ -49,10 +53,16 @@ public:
      */
     void Windowed();
 
-protected:
-    void initialize(Poco::Util::Application& app) override;
+    /**
+     * @brief Moves the current window to the next display.
+     *
+     * Internally, this is done by finding the current display using the X/Y coords, then move it to the next
+     * index (or the first if the window was on the last display). If only one display is available, no changes
+     * are made.
+     */
+    void NextDisplay();
 
-    void uninitialize() override;
+protected:
 
     /**
      * Creates the SDL rendering window and an OpenGL rendering context.

@@ -25,11 +25,12 @@ public:
 
     int TargetFPS();
 
-protected:
     void initialize(Poco::Util::Application& app) override;
 
     void uninitialize() override;
 
+
+protected:
     Poco::Util::AbstractConfiguration::Ptr _config; //!< View of the "projectM" configuration subkey.
 
     projectm* _projectM{ nullptr }; //!< Pointer to the projectM instance used by the application.

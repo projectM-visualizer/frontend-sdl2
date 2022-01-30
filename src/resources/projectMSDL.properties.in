@@ -32,6 +32,10 @@ window.height = 600
 window.waitForVerticalSync = true
 
 ### projectM settings
+
+# If true, displays the built-in projectM logo preset on startup.
+projectM.enableSplash = false
+
 # Target FPS, usually 60.
 projectM.fps = 60
 # Render mesh size. This is the grid in which "per-pixel" code is executed, once per cell.

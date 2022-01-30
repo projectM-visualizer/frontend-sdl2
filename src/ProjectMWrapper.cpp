@@ -52,6 +52,18 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         settings.title_font_url = nullptr;
 
         _projectM = projectm_create_settings(&settings, PROJECTM_FLAG_NONE);
+
+        if (!_config->getBool("enableSplash", true))
+        {
+            if (settings.shuffle_enabled)
+            {
+                projectm_select_random_preset(_projectM, true);
+            }
+            else
+            {
+                projectm_select_next_preset(_projectM, true);
+            }
+        }
     }
 }
 

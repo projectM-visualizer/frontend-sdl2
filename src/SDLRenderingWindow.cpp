@@ -11,6 +11,24 @@ const char* SDLRenderingWindow::name() const
     return "SDL2 Rendering Window";
 }
 
+void SDLRenderingWindow::initialize(Poco::Util::Application& app)
+{
+    _config = app.config().createView("window");
+
+    if (!_renderingWindow)
+    {
+        CreateSDLWindow();
+    }
+}
+
+void SDLRenderingWindow::uninitialize()
+{
+    if (_renderingWindow)
+    {
+        DestroySDLWindow();
+    }
+}
+
 void SDLRenderingWindow::GetDrawableSize(int& width, int& height) const
 {
     SDL_GL_GetDrawableSize(_renderingWindow, &width, &height);
@@ -47,7 +65,7 @@ void SDLRenderingWindow::Fullscreen()
             SDL_SetWindowSize(_renderingWindow, fullscreenWidth, fullscreenHeight);
         }
         SDL_SetWindowFullscreen(_renderingWindow, SDL_WINDOW_FULLSCREEN);
-        if(_logger.debug())
+        if (_logger.debug())
         {
             int width{ 0 };
             int height{ 0 };
@@ -59,7 +77,7 @@ void SDLRenderingWindow::Fullscreen()
     else
     {
         SDL_SetWindowFullscreen(_renderingWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        if(_logger.debug())
+        if (_logger.debug())
         {
             int width{ 0 };
             int height{ 0 };
@@ -81,24 +99,83 @@ void SDLRenderingWindow::Windowed()
     }
     SDL_ShowCursor(true);
 
+    poco_debug_f2(_logger, "Entered windowed mode with size %dx%d",
+                  _lastWindowWidth, _lastWindowHeight);
+
     _fullscreen = false;
 }
 
-void SDLRenderingWindow::initialize(Poco::Util::Application& app)
+void SDLRenderingWindow::NextDisplay()
 {
-    _config = app.config().createView("window");
+    auto numDisplays = SDL_GetNumVideoDisplays();
 
-    if (!_renderingWindow)
+    poco_debug_f1(_logger, "Displays available: %?d.", numDisplays);
+
+    if (numDisplays < 2)
     {
-        CreateSDLWindow();
+        return;
     }
-}
 
-void SDLRenderingWindow::uninitialize()
-{
-    if (_renderingWindow)
+    bool wasFullscreen{ _fullscreen };
+    if (_fullscreen)
     {
-        DestroySDLWindow();
+        Windowed();
+    }
+
+    int left;
+    int top;
+
+    SDL_GetWindowPosition(_renderingWindow, &left, &top);
+
+    poco_debug_f2(_logger, "Window position is X=%?d Y=%?d", left, top);
+
+    // Find current display
+    int currentDisplay{ -1 };
+    for (int display = 0; display < numDisplays; display++)
+    {
+        SDL_Rect bounds;
+        SDL_GetDisplayBounds(display, &bounds);
+
+        poco_debug_f(_logger, "Bounds for display %?d: X=%?d Y=%?d W=%?d H=%?d",
+                      display, bounds.x, bounds.y, bounds.w, bounds.h);
+
+        // Need to add 1 to left and top, as some window managers will screw up here.
+        if (left + 1 >= bounds.x && left + 1 < bounds.x + bounds.w
+            && top + 1 >= bounds.y && top + 1 < bounds.y + bounds.h)
+        {
+            poco_debug_f1(_logger, "Window is currently on display %?d.", display);
+            currentDisplay = display;
+            break;
+        }
+    }
+
+    int newDisplay = (currentDisplay + 1) % numDisplays;
+
+    poco_debug_f1(_logger, "Moving window to display %?d.", newDisplay);
+
+    if (newDisplay != currentDisplay)
+    {
+
+        SDL_Rect oldBounds{};
+        SDL_Rect newBounds;
+
+        int leftOffset{ 0 };
+        int topOffset{ 0 };
+
+        SDL_GetDisplayBounds(newDisplay, &newBounds);
+        if (currentDisplay >= 0)
+        {
+            SDL_GetDisplayBounds(currentDisplay, &oldBounds);
+            leftOffset = left - oldBounds.x;
+            topOffset = top - oldBounds.y;
+        }
+
+        SDL_SetWindowPosition(_renderingWindow, newBounds.x + leftOffset, newBounds.y + topOffset);
+    }
+
+    if (wasFullscreen)
+    {
+        Fullscreen();
     }
 }
 
@@ -111,17 +188,17 @@ void SDLRenderingWindow::CreateSDLWindow()
     int left{ _config->getInt("left", SDL_WINDOWPOS_UNDEFINED) };
     int top{ _config->getInt("top", SDL_WINDOWPOS_UNDEFINED) };
 
-    auto monitor = _config->getInt("monitor", 0);
-    if (monitor > 0)
+    auto display = _config->getInt("monitor", 0);
+    if (display > 0)
     {
         auto numDisplays = SDL_GetNumVideoDisplays();
-        if (monitor > numDisplays)
+        if (display > numDisplays)
         {
-            monitor = numDisplays;
+            display = numDisplays;
         }
 
         SDL_Rect bounds;
-        SDL_GetDisplayBounds(monitor - 1, &bounds);
+        SDL_GetDisplayBounds(display - 1, &bounds);
         left = bounds.x;
         top = bounds.y;
     }

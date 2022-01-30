@@ -40,16 +40,7 @@ find_package(libprojectM REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Poco REQUIRED COMPONENTS Util)
 
-if(SDL2_VERSION VERSION_LESS 2.0.5)
-    message(FATAL_ERROR "libSDL version 2.0.5 or higher is required. Version found: ${SDL2_VERSION}.")
-endif()
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND SDL2_VERSION VERSION_LESS 2.0.16)
-    message(AUTHOR_WARNING
-            "NOTE: libSDL 2.0.15 and lower do not support capture from PulseAudio \"monitor\" devices.\n"
-            "It is highly recommended to use at least version 2.0.16!"
-            )
-endif()
+include(dependencies_check.cmake)
 
 add_subdirectory(src)
 
