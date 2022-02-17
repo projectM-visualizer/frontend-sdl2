@@ -8,6 +8,7 @@
 #include <Poco/Util/AbstractConfiguration.h>
 
 #include <memory>
+#include <bits/stl_map.h>
 
 /**
  * @brief Audio capturing proxy class/subsystem.
@@ -35,6 +36,25 @@ public:
     std::string AudioDeviceName() const;
 
 protected:
+    /**
+     * @brief Prints a list of available audio devices on standard output if requested by the user.
+     * @param deviceList The list of available audio devices.
+     */
+    void PrintDeviceList(const std::map<int, std::string>&  deviceList) const;
+
+    /**
+     * @brief Returns the index of the initial audio device that should be used.
+     *
+     * Tries to find a device name or index specified in the user configuration and returns
+     * it if either was found and is inside the device list.
+     *
+     * If none was found, it returns -1, which delegates default device selection to the capture API
+     * implementation.
+     *
+     * @param deviceList The list of available audio devices.
+     * @return A device index from -1 to the number of available devices minus one.
+     */
+    int GetInitialAudioDeviceIndex(const std::map<int, std::string>& deviceList);
 
     Poco::Util::AbstractConfiguration::Ptr _config; //!< View of the "audio" configuration subkey.
 
