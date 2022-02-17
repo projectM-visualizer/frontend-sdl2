@@ -6,15 +6,13 @@ if(CMAKE_VERSION VERSION_LESS 3.19 AND CMAKE_GENERATOR STREQUAL "Xcode")
             "version 3.19 or use a different generator, e.g. \"Unix Makefiles\" or \"Ninja\".")
 endif()
 
-project(projectM_SDL)
-
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_POSITION_INDEPENDENT_CODE YES)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-project(projectMSDL
+project(projectM-SDL
         LANGUAGES C CXX
         VERSION 2.0.0
         )
