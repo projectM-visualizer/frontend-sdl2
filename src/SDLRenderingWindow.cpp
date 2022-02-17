@@ -101,11 +101,11 @@ void SDLRenderingWindow::Windowed()
     if (_lastWindowWidth > 0 && _lastWindowHeight > 0)
     {
         SDL_SetWindowSize(_renderingWindow, _lastWindowWidth, _lastWindowHeight);
-    }
-    SDL_ShowCursor(true);
+        SDL_ShowCursor(true);
 
-    poco_debug_f2(_logger, "Entered windowed mode with size %dx%d",
-                  _lastWindowWidth, _lastWindowHeight);
+        poco_debug_f2(_logger, "Entered windowed mode with size %dx%d",
+                      _lastWindowWidth, _lastWindowHeight);
+    }
 
     _fullscreen = false;
 }
@@ -118,12 +118,14 @@ void SDLRenderingWindow::NextDisplay()
 
     if (numDisplays < 2)
     {
+        poco_debug(_logger, "Cannot move the window anywhere.");
         return;
     }
 
     bool wasFullscreen{ _fullscreen };
     if (_fullscreen)
     {
+        poco_debug(_logger, "Leaving fullscreen before moving.");
         Windowed();
     }
 
@@ -175,11 +177,18 @@ void SDLRenderingWindow::NextDisplay()
             topOffset = top - oldBounds.y;
         }
 
-        SDL_SetWindowPosition(_renderingWindow, newBounds.x + leftOffset, newBounds.y + topOffset);
+        int newLeft = newBounds.x + leftOffset;
+        int newTop = newBounds.y + topOffset;
+
+        SDL_SetWindowPosition(_renderingWindow, newLeft, newTop);
+
+        poco_debug_f(_logger, "Old position: X=%?d Y=%?d, new position: X=%?d Y=%?d.",
+                     left, top, newLeft, newTop);
     }
 
     if (wasFullscreen)
     {
+        poco_debug(_logger, "Was in fullscreen before moving.");
         Fullscreen();
     }
 }
@@ -196,6 +205,7 @@ void SDLRenderingWindow::CreateSDLWindow()
     auto display = _config->getInt("monitor", 0);
     if (display > 0)
     {
+        poco_debug_f1(_logger, "User requested to place window on monitor %?d.", display);
         auto numDisplays = SDL_GetNumVideoDisplays();
         if (display > numDisplays)
         {
@@ -206,6 +216,8 @@ void SDLRenderingWindow::CreateSDLWindow()
         SDL_GetDisplayBounds(display - 1, &bounds);
         left = bounds.x;
         top = bounds.y;
+
+        poco_debug_f3(_logger, "Creating window on monitor %?d at X=%?d Y=%?d.", display, left, top);
     }
 
 #if USE_GLES
@@ -259,12 +271,16 @@ void SDLRenderingWindow::CreateSDLWindow()
 
 void SDLRenderingWindow::DestroySDLWindow()
 {
-    SDL_DestroyWindow(_renderingWindow);
+    poco_debug(_logger, "Closing rendering window and destroying OpenGL context.");
+
     SDL_GL_DeleteContext(_glContext);
+    _glContext = nullptr;
+
+    SDL_DestroyWindow(_renderingWindow);
+    _renderingWindow = nullptr;
+
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
-    _renderingWindow = nullptr;
-    _glContext = nullptr;
 }
 
 void SDLRenderingWindow::DumpOpenGLInfo()

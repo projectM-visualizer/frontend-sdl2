@@ -67,7 +67,9 @@ protected:
 
     bool _mouseDown{ false }; //!< Left mouse button is pressed
 
+    int _renderWidth{ 0 };
+    int _renderHeight{ 0 };
+
     Poco::Logger& _logger{ Poco::Logger::get("RenderLoop") }; //!< The class logger.
 };
-
 

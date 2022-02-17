@@ -59,7 +59,14 @@ void RenderLoop::PollEvents()
                         int renderHeight;
                         _sdlRenderingWindow.GetDrawableSize(renderWidth, renderHeight);
 
-                        projectm_set_window_size(_projectMHandle, renderWidth, renderHeight);
+                        if (renderWidth != _renderWidth || renderHeight != _renderHeight)
+                        {
+                            projectm_set_window_size(_projectMHandle, renderWidth, renderHeight);
+                            _renderWidth = renderWidth;
+                            _renderHeight = renderHeight;
+
+                            poco_debug_f2(_logger, "Resized rendering canvas to %?dx%?d.", renderWidth, renderHeight);
+                        }
                     }
                         break;
 
