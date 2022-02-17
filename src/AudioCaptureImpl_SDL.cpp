@@ -2,8 +2,6 @@
 
 #include <libprojectM/projectM.h>
 
-#include <assert.h>
-
 AudioCaptureImpl::AudioCaptureImpl()
 {
 #ifdef SDL_HINT_AUDIO_INCLUDE_MONITORS
@@ -20,7 +18,7 @@ AudioCaptureImpl::~AudioCaptureImpl()
 std::map<int, std::string> AudioCaptureImpl::AudioDeviceList()
 {
     std::map<int, std::string> deviceList{
-        { -1, "System default capturing device" }
+        { -1, "Default capturing device" }
     };
 
     auto recordingDeviceCount = SDL_GetNumAudioDevices(true);
@@ -41,6 +39,8 @@ void AudioCaptureImpl::StartRecording(projectm* projectMHandle, int audioDeviceI
     if (OpenAudioDevice())
     {
         SDL_PauseAudioDevice(_currentAudioDeviceID, false);
+
+        poco_debug(_logger, "Started audio recording.");
     }
 }
 
@@ -51,6 +51,8 @@ void AudioCaptureImpl::StopRecording()
         SDL_PauseAudioDevice(_currentAudioDeviceID, true);
         SDL_CloseAudioDevice(_currentAudioDeviceID);
         _currentAudioDeviceID = 0;
+
+        poco_debug(_logger, "Stopped audio recording and closed device.");
     }
 }
 
@@ -107,7 +109,7 @@ bool AudioCaptureImpl::OpenAudioDevice()
 
 void AudioCaptureImpl::AudioInputCallback(void* userData, unsigned char* stream, int len)
 {
-    assert(userData);
+    poco_assert_dbg(userData);
     auto instance = reinterpret_cast<AudioCaptureImpl*>(userData);
 
     unsigned int samples = len / sizeof(float) / instance->_channels;
