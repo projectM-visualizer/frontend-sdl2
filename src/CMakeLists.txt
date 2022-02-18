@@ -1,11 +1,12 @@
 
 configure_file(resources/projectMSDL.properties.in ${CMAKE_CURRENT_BINARY_DIR}/projectMSDL.properties @ONLY)
 
-add_executable(projectMSDL
+add_executable(projectMSDL WIN32
         AudioCapture.cpp
         AudioCapture.h
         FPSLimiter.cpp
         FPSLimiter.h
+        main.cpp
         ProjectMSDLApplication.cpp
         ProjectMSDLApplication.h
         ProjectMWrapper.cpp
@@ -49,4 +50,5 @@ target_link_libraries(projectMSDL
         libprojectM::${PROJECTM_LINKAGE}
         Poco::Util
         SDL2::SDL2$<$<STREQUAL:"${SDL2_LINKAGE}","static">:"-static">
+        SDL2::SDL2main
         )

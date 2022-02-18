@@ -1,3 +1,7 @@
+// Keep it as the first line, as SDL2 will otherwise redefine
+// ProjectMSDLApplication::main to ProjectMSDLApplication::SDL_main
+#define SDL_MAIN_HANDLED
+
 #include "ProjectMSDLApplication.h"
 
 #include "AudioCapture.h"
@@ -164,5 +168,3 @@ void ProjectMSDLApplication::ListAudioDevices(POCO_UNUSED const std::string& nam
 {
     _commandLineOverrides->setBool("audio.listDevices", true);
 }
-
-POCO_APP_MAIN(ProjectMSDLApplication)
