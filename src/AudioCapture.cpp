@@ -4,6 +4,8 @@
 
 #include <Poco/Util/Application.h>
 
+#include <iostream>
+
 const char* AudioCapture::name() const
 {
     return "Audio Capturing";

@@ -10,6 +10,8 @@
 
 #include <Poco/Util/HelpFormatter.h>
 
+#include <iostream>
+
 ProjectMSDLApplication::ProjectMSDLApplication()
     : Poco::Util::Application()
 {

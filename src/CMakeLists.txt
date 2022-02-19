@@ -38,15 +38,19 @@ else()
             )
 endif()
 
+find_package(libprojectM REQUIRED)
 target_compile_definitions(projectMSDL
         PRIVATE
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
         LIBPROJECTM_BUILD_VERSION="${libprojectM_VERSION}"
         )
 
+find_package(OpenMP REQUIRED)
 target_link_libraries(projectMSDL
         PRIVATE
-        libprojectM::${PROJECTM_LINKAGE}
+        libprojectM.a #::${PROJECTM_LINKAGE}
+        OpenGL::GL
+        OpenMP::OpenMP_CXX
         Poco::Util
         SDL2::SDL2$<$<STREQUAL:"${SDL2_LINKAGE}","static">:"-static">
-        )
+       )
