@@ -85,7 +85,7 @@ protected:
      */
     void DumpOpenGLInfo();
 
-    Poco::Util::AbstractConfiguration::Ptr _config; //!< View of the "window" configuration subkey.
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "window" configuration subkey.
 
     SDL_Window* _renderingWindow{ nullptr }; //!< Pointer to the SDL window used for rendering.
     SDL_GLContext _glContext{ nullptr }; //!< Pointer to the OpenGL context associated with the window.

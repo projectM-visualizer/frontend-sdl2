@@ -143,8 +143,9 @@ void SDLRenderingWindow::NextDisplay()
         SDL_Rect bounds;
         SDL_GetDisplayBounds(display, &bounds);
 
-        poco_debug_f(_logger, "Bounds for display %?d: X=%?d Y=%?d W=%?d H=%?d",
-                      display, bounds.x, bounds.y, bounds.w, bounds.h);
+        std::stringstream debugOutput;
+        poco_debug_f1(_logger, "Bounds for display %?d:", display);
+        poco_debug_f4(_logger, "    X=%?d Y=%?d W=%?d H=%?d", bounds.x, bounds.y, bounds.w, bounds.h);
 
         // Need to add 1 to left and top, as some window managers will screw up here.
         if (left + 1 >= bounds.x && left + 1 < bounds.x + bounds.w
@@ -182,7 +183,7 @@ void SDLRenderingWindow::NextDisplay()
 
         SDL_SetWindowPosition(_renderingWindow, newLeft, newTop);
 
-        poco_debug_f(_logger, "Old position: X=%?d Y=%?d, new position: X=%?d Y=%?d.",
+        poco_debug_f4(_logger, "Old position: X=%?d Y=%?d, new position: X=%?d Y=%?d.",
                      left, top, newLeft, newTop);
     }
 
