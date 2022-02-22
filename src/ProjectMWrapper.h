@@ -7,6 +7,8 @@
 #include <Poco/Util/Subsystem.h>
 #include <Poco/Util/AbstractConfiguration.h>
 
+#include <memory>
+
 class ProjectMWrapper : public Poco::Util::Subsystem
 {
 public:
@@ -31,7 +33,7 @@ public:
 
 
 protected:
-    Poco::Util::AbstractConfiguration::Ptr _config; //!< View of the "projectM" configuration subkey.
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
 
     projectm* _projectM{ nullptr }; //!< Pointer to the projectM instance used by the application.
 

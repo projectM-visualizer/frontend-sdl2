@@ -56,7 +56,7 @@ protected:
      */
     int GetInitialAudioDeviceIndex(const std::map<int, std::string>& deviceList);
 
-    Poco::Util::AbstractConfiguration::Ptr _config; //!< View of the "audio" configuration subkey.
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "audio" configuration subkey.
 
     std::unique_ptr<AudioCaptureImpl> _impl; //!< The OS-specific capture implementation.
 

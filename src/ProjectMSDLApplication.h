@@ -28,8 +28,8 @@ protected:
 
     void ListAudioDevices(const std::string& name, const std::string& value);
 
-    Poco::Util::MapConfiguration::Ptr _commandLineOverrides{
-        Poco::makeAuto<Poco::Util::MapConfiguration>() }; //!< Map configuration with overrides set by command line arguments.
+    Poco::AutoPtr<Poco::Util::MapConfiguration> _commandLineOverrides{
+        new Poco::Util::MapConfiguration() }; //!< Map configuration with overrides set by command line arguments.
 };
 
 
