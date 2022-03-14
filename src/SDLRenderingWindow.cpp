@@ -143,7 +143,6 @@ void SDLRenderingWindow::NextDisplay()
         SDL_Rect bounds;
         SDL_GetDisplayBounds(display, &bounds);
 
-        std::stringstream debugOutput;
         poco_debug_f1(_logger, "Bounds for display %?d:", display);
         poco_debug_f4(_logger, "    X=%?d Y=%?d W=%?d H=%?d", bounds.x, bounds.y, bounds.w, bounds.h);
 
