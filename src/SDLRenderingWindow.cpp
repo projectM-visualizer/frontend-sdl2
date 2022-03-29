@@ -1,10 +1,8 @@
 #include "SDLRenderingWindow.h"
 
-#include <libprojectM/projectM.h>
-
 #include <Poco/Util/Application.h>
 
-#include <GL/gl.h>
+#include <SDL2/SDL_opengl.h>
 
 const char* SDLRenderingWindow::name() const
 {
