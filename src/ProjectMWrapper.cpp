@@ -4,7 +4,7 @@
 
 #include <Poco/Util/Application.h>
 
-#include <GL/gl.h>
+#include <SDL2/SDL_opengl.h>
 
 const char* ProjectMWrapper::name() const
 {

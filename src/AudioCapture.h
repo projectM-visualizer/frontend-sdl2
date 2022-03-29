@@ -8,7 +8,6 @@
 #include <Poco/Util/AbstractConfiguration.h>
 
 #include <memory>
-#include <bits/stl_map.h>
 
 /**
  * @brief Audio capturing proxy class/subsystem.

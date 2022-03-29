@@ -38,6 +38,7 @@ find_package(libprojectM REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Poco REQUIRED COMPONENTS Util)
 
+include(SDL2Target)
 include(dependencies_check.cmake)
 
 add_subdirectory(src)
