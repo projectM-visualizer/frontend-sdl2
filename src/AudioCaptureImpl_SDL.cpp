@@ -116,10 +116,10 @@ void AudioCaptureImpl::AudioInputCallback(void* userData, unsigned char* stream,
 
     if (instance->_channels == 1)
     {
-        projectm_pcm_add_float_1ch_data(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples);
+        projectm_pcm_add_float(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples, PROJECTM_MONO);
     }
     else if (instance->_channels == 2)
     {
-        projectm_pcm_add_float_2ch_data(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples);
+        projectm_pcm_add_float(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples, PROJECTM_STEREO);
     }
 }
