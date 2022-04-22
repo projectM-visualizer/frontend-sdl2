@@ -8,15 +8,17 @@ add_executable(projectMSDL WIN32
         AudioCapture.h
         FPSLimiter.cpp
         FPSLimiter.h
-        main.cpp
+        PresetSelectionGui.cpp
+        PresetSelectionGui.h
         ProjectMSDLApplication.cpp
         ProjectMSDLApplication.h
         ProjectMWrapper.cpp
         ProjectMWrapper.h
         RenderLoop.cpp
         RenderLoop.h
-        SDLRenderingWindow.h
         SDLRenderingWindow.cpp
+        SDLRenderingWindow.h
+        main.cpp
         )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -48,6 +50,7 @@ target_compile_definitions(projectMSDL
 
 target_link_libraries(projectMSDL
         PRIVATE
+        ImGui
         libprojectM::playlist
         Poco::Util
         SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>

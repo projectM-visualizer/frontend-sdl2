@@ -68,6 +68,10 @@ public:
      */
     void NextDisplay();
 
+    SDL_Window* GetRenderingWindow() const;
+
+    SDL_GLContext GetGlContext() const;
+
 protected:
 
     /**

@@ -10,6 +10,7 @@ RenderLoop::RenderLoop()
     : _audioCapture(Poco::Util::Application::instance().getSubsystem<AudioCapture>())
     , _projectMWrapper(Poco::Util::Application::instance().getSubsystem<ProjectMWrapper>())
     , _sdlRenderingWindow(Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>())
+    , _presetSelectionGui(Poco::Util::Application::instance().getSubsystem<PresetSelectionGui>())
     , _projectMHandle(_projectMWrapper.ProjectM())
     , _playlistHandle(_projectMWrapper.Playlist())
 {
@@ -31,6 +32,7 @@ void RenderLoop::Run()
         CheckViewportSize();
         _audioCapture.FillBuffer();
         _projectMWrapper.RenderFrame();
+        _presetSelectionGui.Draw();
         _sdlRenderingWindow.Swap();
         limiter.EndFrame();
     }
@@ -44,6 +46,8 @@ void RenderLoop::PollEvents()
 
     while (SDL_PollEvent(&event))
     {
+        _presetSelectionGui.ProcessInput(event);
+
         switch (event.type)
         {
             case SDL_MOUSEWHEEL:
@@ -223,6 +227,11 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
 
 void RenderLoop::ScrollEvent(const SDL_MouseWheelEvent& event)
 {
+    if (_presetSelectionGui.WantsMouseInput())
+    {
+        return;
+    }
+
     // Wheel up is positive
     if (event.y > 0)
     {
@@ -237,6 +246,11 @@ void RenderLoop::ScrollEvent(const SDL_MouseWheelEvent& event)
 
 void RenderLoop::MouseDownEvent(const SDL_MouseButtonEvent& event)
 {
+    if (_presetSelectionGui.WantsMouseInput())
+    {
+        return;
+    }
+
     switch (event.button)
     {
         case SDL_BUTTON_LEFT:
@@ -277,6 +291,11 @@ void RenderLoop::MouseDownEvent(const SDL_MouseButtonEvent& event)
 
 void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
 {
+    if (_presetSelectionGui.WantsMouseInput())
+    {
+        return;
+    }
+
     if (event.button == SDL_BUTTON_LEFT)
     {
         _mouseDown = false;

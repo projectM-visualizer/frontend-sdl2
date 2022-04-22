@@ -288,3 +288,13 @@ void SDLRenderingWindow::DumpOpenGLInfo()
                   std::string(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION))));
     poco_debug_f1(_logger, "- GL_VENDOR: %s", std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR))));
 }
+
+SDL_Window* SDLRenderingWindow::GetRenderingWindow() const
+{
+    return _renderingWindow;
+}
+
+SDL_GLContext SDLRenderingWindow::GetGlContext() const
+{
+    return _glContext;
+}
