@@ -30,6 +30,7 @@ find_package(Poco REQUIRED COMPONENTS JSON XML Util Foundation)
 
 include(SDL2Target)
 include(dependencies_check.cmake)
+include(ImGui.cmake)
 
 add_subdirectory(src)
 
