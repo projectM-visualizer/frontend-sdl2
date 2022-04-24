@@ -19,6 +19,11 @@ target_include_directories(ImGui
         ${SDL2_INCLUDE_DIRS}
         )
 
+# Build font embedding tool
+add_executable(ImGuiBinaryToCompressedC EXCLUDE_FROM_ALL
+        vendor/imgui/misc/fonts/binary_to_compressed_c.cpp
+        )
+
 # Add SDL2/OpenGL 3 Dear ImGui example application target for testing
 add_executable(ImGuiDemo EXCLUDE_FROM_ALL
         vendor/imgui/imgui_demo.cpp

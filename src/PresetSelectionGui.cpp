@@ -1,12 +1,16 @@
 #include "PresetSelectionGui.h"
 
+#include "AnonymousProFont.h"
+#include "ProjectMWrapper.h"
 #include "SDLRenderingWindow.h"
 
 #include "imgui.h"
-#include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdl.h"
 
 #include <Poco/Util/Application.h>
+
+#include <cmath>
 
 const char* PresetSelectionGui::name() const
 {
@@ -23,10 +27,18 @@ void PresetSelectionGui::initialize(Poco::Util::Application& app)
     ImGui::StyleColorsDark();
 
     auto& renderingWindow = Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>();
+    auto& projectMWrapper = Poco::Util::Application::instance().getSubsystem<ProjectMWrapper>();
 
-    ImGui_ImplSDL2_InitForOpenGL(renderingWindow.GetRenderingWindow(), renderingWindow.GetGlContext());
+    _sdlRenderingWindow = &renderingWindow;
+    _projectMWrapper = &projectMWrapper;
+
+    _renderingWindow = renderingWindow.GetRenderingWindow();
+    _glContext = renderingWindow.GetGlContext();
+
+    ImGui_ImplSDL2_InitForOpenGL(_renderingWindow, _glContext);
     ImGui_ImplOpenGL3_Init("#version 130");
 
+    UpdateFontSize();
 }
 
 void PresetSelectionGui::uninitialize()
@@ -34,6 +46,46 @@ void PresetSelectionGui::uninitialize()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
+
+    _sdlRenderingWindow = nullptr;
+    _projectMWrapper = nullptr;
+    _renderingWindow = nullptr;
+    _glContext = nullptr;
+}
+
+void PresetSelectionGui::UpdateFontSize()
+{
+    ImGuiIO& io = ImGui::GetIO();
+
+    float dpi{96.0f};// Use default value of 96 DPI if SDL_GetDisplayDPI doesn't return a value!
+    auto displayIndex = SDL_GetWindowDisplayIndex(_renderingWindow);
+    if (displayIndex < 0)
+    {
+        poco_debug_f1(_logger, "Could not get display index for application window: %s", std::string(SDL_GetError()));
+        return;
+    }
+
+    auto result = SDL_GetDisplayDPI(displayIndex, &dpi, nullptr, nullptr);
+    if (result != 0)
+    {
+        poco_debug_f2(_logger, "Could not get DPI info for display %?d: %s", displayIndex, std::string(SDL_GetError()));
+    }
+
+    // Only interested in changes of > 1 DPI, really.
+    if (static_cast<uint32_t>(dpi) == static_cast<uint32_t>(_dpi))
+    {
+        return;
+    }
+
+    poco_debug_f3(_logger, "DPI change for display %?d: %hf -> %hf", displayIndex, _dpi, dpi);
+
+    _dpi = dpi;
+
+    _font = io.Fonts->AddFontFromMemoryCompressedTTF(&AnonymousPro_compressed_data, AnonymousPro_compressed_size, floor(12.0f * (_dpi / 96.0f)));
+    io.Fonts->Build();
+    ImGui_ImplOpenGL3_CreateFontsTexture();
+
+    ImGui::GetStyle().ScaleAllSizes(1.0);
 }
 
 void PresetSelectionGui::ProcessInput(const SDL_Event& event)
@@ -90,6 +142,7 @@ bool PresetSelectionGui::WantsKeyboardInput()
     auto& io = ImGui::GetIO();
     return io.WantCaptureKeyboard;
 }
+
 bool PresetSelectionGui::WantsMouseInput()
 {
     auto& io = ImGui::GetIO();

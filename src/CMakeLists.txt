@@ -3,7 +3,14 @@ set(PROJECTM_CONFIGURATION_FILE "${CMAKE_CURRENT_BINARY_DIR}/projectMSDL.propert
 set(PROJECTM_CONFIGURATION_FILE "${PROJECTM_CONFIGURATION_FILE}" PARENT_SCOPE)
 configure_file(resources/projectMSDL.properties.in "${PROJECTM_CONFIGURATION_FILE}" @ONLY)
 
+# Font embedding
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/AnonymousProFont.h"
+        COMMAND $<TARGET_FILE:ImGuiBinaryToCompressedC> "${CMAKE_CURRENT_SOURCE_DIR}/resources/AnonymousPro-Regular.ttf" AnonymousPro > "${CMAKE_CURRENT_BINARY_DIR}/AnonymousProFont.h"
+        MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/resources/AnonymousPro-Regular.ttf"
+        )
+
 add_executable(projectMSDL WIN32
+        "${CMAKE_CURRENT_BINARY_DIR}/AnonymousProFont.h"
         AudioCapture.cpp
         AudioCapture.h
         FPSLimiter.cpp
@@ -19,6 +26,11 @@ add_executable(projectMSDL WIN32
         SDLRenderingWindow.cpp
         SDLRenderingWindow.h
         main.cpp
+        )
+
+target_include_directories(projectMSDL
+        PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}"
         )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
