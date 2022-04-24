@@ -14,6 +14,7 @@ project(projectM-SDL
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 set(SDL2_LINKAGE "shared" CACHE STRING "Set to either shared or static to specify how libSDL2 should be linked. Defaults to shared.")
+option(ENABLE_FREETYPE "Use the Freetype font rendering library instead of the built-in stb_truetype if available" ON)
 
 set(DEFAULT_PRESETS_PATH "\${application.dir}/presets" CACHE STRING "Default presets path in the configuration file.")
 set(DEFAULT_TEXTURES_PATH "\${application.dir}/textures" CACHE STRING "Default textures path in the configuration file.")
@@ -27,6 +28,10 @@ endif()
 find_package(projectM4 REQUIRED COMPONENTS Playlist)
 find_package(SDL2 REQUIRED)
 find_package(Poco REQUIRED COMPONENTS JSON XML Util Foundation)
+
+if(ENABLE_FREETYPE)
+    find_package(Freetype)
+endif()
 
 include(SDL2Target)
 include(dependencies_check.cmake)
@@ -44,3 +49,6 @@ include(packaging.cmake)
 message(STATUS "SDL version: ${SDL2_VERSION}")
 message(STATUS "Poco version: ${Poco_VERSION}")
 message(STATUS "projectM version: ${projectM4_VERSION}")
+if(Freetype_FOUND)
+    message(STATUS "Freetype version: ${FREETYPE_VERSION_STRING}")
+endif()

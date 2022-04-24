@@ -12,6 +12,24 @@ add_library(ImGui STATIC
         vendor/imgui/backends/imgui_impl_opengl3_loader.h
         )
 
+if(ENABLE_FREETYPE AND Freetype_FOUND)
+    target_sources(ImGui
+            PRIVATE
+            vendor/imgui/misc/freetype/imgui_freetype.cpp
+            vendor/imgui/misc/freetype/imgui_freetype.h
+            )
+
+    target_compile_definitions(ImGui
+            PUBLIC
+            IMGUI_ENABLE_FREETYPE
+            )
+
+    target_link_libraries(ImGui
+            PUBLIC
+            Freetype::Freetype
+            )
+endif()
+
 target_include_directories(ImGui
         PUBLIC
         ${CMAKE_SOURCE_DIR}/vendor/imgui
