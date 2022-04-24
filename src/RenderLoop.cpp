@@ -89,6 +89,8 @@ void RenderLoop::CheckViewportSize()
         _renderWidth = renderWidth;
         _renderHeight = renderHeight;
 
+        _presetSelectionGui.UpdateFontSize();
+
         poco_debug_f2(_logger, "Resized rendering canvas to %?dx%?d.", renderWidth, renderHeight);
     }
 }
