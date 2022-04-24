@@ -28,12 +28,15 @@ void RenderLoop::Run()
     while (!_wantsToQuit)
     {
         limiter.StartFrame();
+
         PollEvents();
         CheckViewportSize();
         _audioCapture.FillBuffer();
         _projectMWrapper.RenderFrame();
         _presetSelectionGui.Draw();
+
         _sdlRenderingWindow.Swap();
+
         limiter.EndFrame();
     }
 
@@ -51,7 +54,12 @@ void RenderLoop::PollEvents()
         switch (event.type)
         {
             case SDL_MOUSEWHEEL:
-                ScrollEvent(event.wheel);
+
+                if (!_presetSelectionGui.WantsMouseInput())
+                {
+                    ScrollEvent(event.wheel);
+                }
+
                 break;
 
             case SDL_KEYDOWN:
@@ -63,11 +71,19 @@ void RenderLoop::PollEvents()
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
-                MouseDownEvent(event.button);
+                if (!_presetSelectionGui.WantsMouseInput())
+                {
+                    MouseDownEvent(event.button);
+                }
+
                 break;
 
             case SDL_MOUSEBUTTONUP:
-                MouseUpEvent(event.button);
+                if (!_presetSelectionGui.WantsMouseInput())
+                {
+                    MouseUpEvent(event.button);
+                }
+
                 break;
 
             case SDL_QUIT:
@@ -229,11 +245,6 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
 
 void RenderLoop::ScrollEvent(const SDL_MouseWheelEvent& event)
 {
-    if (_presetSelectionGui.WantsMouseInput())
-    {
-        return;
-    }
-
     // Wheel up is positive
     if (event.y > 0)
     {
@@ -293,11 +304,6 @@ void RenderLoop::MouseDownEvent(const SDL_MouseButtonEvent& event)
 
 void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
 {
-    if (_presetSelectionGui.WantsMouseInput())
-    {
-        return;
-    }
-
     if (event.button == SDL_BUTTON_LEFT)
     {
         _mouseDown = false;
