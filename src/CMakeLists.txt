@@ -15,6 +15,8 @@ add_executable(projectMSDL WIN32
         AudioCapture.h
         FPSLimiter.cpp
         FPSLimiter.h
+        GuiFileChooserWindow.cpp
+        GuiFileChooserWindow.h
         PresetSelectionGui.cpp
         PresetSelectionGui.h
         ProjectMSDLApplication.cpp
