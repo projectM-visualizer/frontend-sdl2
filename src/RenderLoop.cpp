@@ -181,6 +181,10 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event)
             projectm_select_next_preset(_projectMHandle, true);
             break;
 
+        case SDLK_p:
+            projectm_select_previous_preset(_projectMHandle, true);
+            break;
+
         case SDLK_r:
             projectm_select_random_preset(_projectMHandle, true);
             break;
