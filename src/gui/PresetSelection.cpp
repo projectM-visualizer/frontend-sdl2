@@ -180,6 +180,13 @@ void PresetSelection::DrawSettingsWindow()
 
         ImGui::SameLine();
 
+        if (ImGui::Button("Lock Preset"))
+        {
+            projectm_lock_preset(_projectMWrapper->ProjectM(), !projectm_is_preset_locked(_projectMWrapper->ProjectM()));
+        }
+
+        ImGui::SameLine();
+
         if (ImGui::Button("Load Preset..."))
         {
             _fileChooser.Show();
