@@ -9,7 +9,7 @@
  *
  * Displays a file browser that shows directories and .milk files from which the user can choose one.
  */
-class GuiFileChooserWindow
+class FileChooser
 {
 public:
 

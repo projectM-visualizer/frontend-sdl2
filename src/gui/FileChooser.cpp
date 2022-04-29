@@ -1,4 +1,4 @@
-#include "GuiFileChooserWindow.h"
+#include "FileChooser.h"
 
 #include "imgui.h"
 
@@ -7,12 +7,12 @@
 
 #include <algorithm>
 
-void GuiFileChooserWindow::Show()
+void FileChooser::Show()
 {
     _visible = true;
 }
 
-bool GuiFileChooserWindow::Draw()
+bool FileChooser::Draw()
 {
     if (!_visible)
     {
@@ -78,12 +78,12 @@ bool GuiFileChooserWindow::Draw()
     return fileSelected;
 }
 
-const Poco::File& GuiFileChooserWindow::SelectedFile() const
+const Poco::File& FileChooser::SelectedFile() const
 {
     return _selectedFile;
 }
 
-void GuiFileChooserWindow::DrawNavButtons()
+void FileChooser::DrawNavButtons()
 {
     ImGui::Checkbox("Show hidden files", &_showhidden);
 
@@ -117,7 +117,7 @@ void GuiFileChooserWindow::DrawNavButtons()
     }
 }
 
-bool GuiFileChooserWindow::PopulateFileList()
+bool FileChooser::PopulateFileList()
 {
     bool fileSelected{false};
     bool changeDir{false};
@@ -178,7 +178,7 @@ bool GuiFileChooserWindow::PopulateFileList()
     return fileSelected;
 }
 
-void GuiFileChooserWindow::ChangeDirectory(const Poco::Path& newDirectory)
+void FileChooser::ChangeDirectory(const Poco::Path& newDirectory)
 {
     _currentDir = newDirectory;
     _currentDir.makeDirectory();

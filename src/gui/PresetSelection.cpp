@@ -1,8 +1,8 @@
-#include "PresetSelectionGui.h"
+#include "PresetSelection.h"
 
-#include "AnonymousProFont.h"
 #include "ProjectMWrapper.h"
 #include "SDLRenderingWindow.h"
+#include "AnonymousProFont.h"
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -12,12 +12,12 @@
 
 #include <cmath>
 
-const char* PresetSelectionGui::name() const
+const char* PresetSelection::name() const
 {
     return "Preset Selection GUI";
 }
 
-void PresetSelectionGui::initialize(Poco::Util::Application& app)
+void PresetSelection::initialize(Poco::Util::Application& app)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -41,7 +41,7 @@ void PresetSelectionGui::initialize(Poco::Util::Application& app)
     UpdateFontSize();
 }
 
-void PresetSelectionGui::uninitialize()
+void PresetSelection::uninitialize()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -53,7 +53,7 @@ void PresetSelectionGui::uninitialize()
     _glContext = nullptr;
 }
 
-void PresetSelectionGui::UpdateFontSize()
+void PresetSelection::UpdateFontSize()
 {
     ImGuiIO& io = ImGui::GetIO();
 
@@ -88,7 +88,7 @@ void PresetSelectionGui::UpdateFontSize()
     ImGui::GetStyle().ScaleAllSizes(1.0);
 }
 
-void PresetSelectionGui::ProcessInput(const SDL_Event& event)
+void PresetSelection::ProcessInput(const SDL_Event& event)
 {
     ImGui_ImplSDL2_ProcessEvent(&event);
     unsigned int position;
@@ -97,7 +97,7 @@ void PresetSelectionGui::ProcessInput(const SDL_Event& event)
     _playlistSize = projectm_get_playlist_size(_projectMWrapper->ProjectM());
 }
 
-void PresetSelectionGui::Draw()
+void PresetSelection::Draw()
 {
     ImGui_ImplSDL2_NewFrame();
     ImGui_ImplOpenGL3_NewFrame();
@@ -134,19 +134,19 @@ void PresetSelectionGui::Draw()
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-bool PresetSelectionGui::WantsKeyboardInput()
+bool PresetSelection::WantsKeyboardInput()
 {
     auto& io = ImGui::GetIO();
     return io.WantCaptureKeyboard;
 }
 
-bool PresetSelectionGui::WantsMouseInput()
+bool PresetSelection::WantsMouseInput()
 {
     auto& io = ImGui::GetIO();
     return io.WantCaptureMouse;
 }
 
-void PresetSelectionGui::DrawSettingsWindow()
+void PresetSelection::DrawSettingsWindow()
 {
     if (ImGui::Begin("projectM Settings", &_settingsVisible))
     {
@@ -163,7 +163,6 @@ void PresetSelectionGui::DrawSettingsWindow()
         {
             projectm_select_preset(_projectMWrapper->ProjectM(), _playlistPosition, true);
         }
-
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 

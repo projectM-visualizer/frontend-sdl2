@@ -10,7 +10,7 @@ RenderLoop::RenderLoop()
     : _audioCapture(Poco::Util::Application::instance().getSubsystem<AudioCapture>())
     , _projectMWrapper(Poco::Util::Application::instance().getSubsystem<ProjectMWrapper>())
     , _sdlRenderingWindow(Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>())
-    , _presetSelectionGui(Poco::Util::Application::instance().getSubsystem<PresetSelectionGui>())
+    , _presetSelectionGui(Poco::Util::Application::instance().getSubsystem<PresetSelection>())
     , _projectMHandle(_projectMWrapper.ProjectM())
     , _playlistHandle(_projectMWrapper.Playlist())
 {

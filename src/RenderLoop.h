@@ -3,7 +3,7 @@
 #include "AudioCapture.h"
 #include "ProjectMWrapper.h"
 #include "SDLRenderingWindow.h"
-#include "PresetSelectionGui.h"
+#include "gui/PresetSelection.h"
 
 #include <Poco/Logger.h>
 
@@ -78,7 +78,7 @@ protected:
     AudioCapture& _audioCapture;
     ProjectMWrapper& _projectMWrapper;
     SDLRenderingWindow& _sdlRenderingWindow;
-    PresetSelectionGui& _presetSelectionGui;
+    PresetSelection& _presetSelectionGui;
 
     projectm_handle _projectMHandle{nullptr};
     projectm_playlist_handle _playlistHandle{nullptr};

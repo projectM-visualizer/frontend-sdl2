@@ -8,7 +8,7 @@
 #include "ProjectMWrapper.h"
 #include "RenderLoop.h"
 #include "SDLRenderingWindow.h"
-#include "PresetSelectionGui.h"
+#include "gui/PresetSelection.h"
 
 #include <Poco/Environment.h>
 #include <Poco/File.h>
@@ -24,7 +24,7 @@ ProjectMSDLApplication::ProjectMSDLApplication()
     addSubsystem(new SDLRenderingWindow);
     addSubsystem(new ProjectMWrapper);
     addSubsystem(new AudioCapture);
-    addSubsystem(new PresetSelectionGui);
+    addSubsystem(new PresetSelection);
 }
 
 const char* ProjectMSDLApplication::name() const

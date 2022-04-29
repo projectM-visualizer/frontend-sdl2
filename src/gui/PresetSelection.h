@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GuiFileChooserWindow.h"
+#include "FileChooser.h"
 
 #include <SDL2/SDL.h>
 
@@ -13,7 +13,7 @@ struct ImFont;
 class ProjectMWrapper;
 class SDLRenderingWindow;
 
-class PresetSelectionGui : public Poco::Util::Subsystem
+class PresetSelection : public Poco::Util::Subsystem
 {
 public:
     const char* name() const override;
@@ -44,7 +44,7 @@ protected:
 
     float _dpi{ 0.0f }; //!< Last DPI value.
 
-    GuiFileChooserWindow _fileChooser; //!< File chooser dialog.
+    FileChooser _fileChooser; //!< File chooser dialog.
 
     bool _settingsVisible{ true }; //!< Flag for settings window visibility.
     float _displayDuration{ 0.0f }; //!< Preset display time
