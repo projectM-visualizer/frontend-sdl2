@@ -127,6 +127,19 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
     options.addOption(Option("fps", "", "Target frames per second rate.",
                              false, "<number>", true)
                           .binding("projectM.fps", _commandLineOverrides));
+
+    options.addOption(Option("shuffleEnabled", "", "Shuffle enabled.",
+                             false, "<0/1>", true)
+                          .binding("projectM.shuffleEnabled", _commandLineOverrides));
+
+    options.addOption(Option("presetDuration", "", "Preset duration. Any number > 1, default 30.",
+                             false, "<number>", true)
+                          .binding("projectM.displayDuration", _commandLineOverrides));
+
+    options.addOption(Option("beatSensitivity", "", "Beat sensitivity. Between 0.0 and 5.0. Default 1.0.",
+                             false, "<number>", true)
+                          .binding("projectM.beatSensitivity", _commandLineOverrides));
+
 }
 
 int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)
