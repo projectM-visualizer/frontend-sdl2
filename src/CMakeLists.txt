@@ -49,7 +49,20 @@ target_link_libraries(projectMSDL
         PRIVATE
         libprojectM::${PROJECTM_LINKAGE}
         Poco::Util
-        SDL2::SDL2$<$<STREQUAL:"${SDL2_LINKAGE}","static">:"-static">
+        SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>
         SDL2::SDL2main
-        OpenGL::GL
         )
+
+if(MSVC)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.16")
+        set_target_properties(projectMSDL
+                PROPERTIES
+                VS_DPI_AWARE "PerMonitor"
+                )
+    else()
+        message(AUTHOR_WARNING
+                "You're using a CMake version less than 3.16 with Visual Studio.\n"
+                "The resulting projectMSDL executable will not be DPI-aware and possibly render at a "
+                "lower-than-expected resolution on high-DPI displays.")
+    endif()
+endif()
