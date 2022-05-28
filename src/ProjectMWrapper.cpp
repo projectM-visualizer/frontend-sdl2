@@ -52,6 +52,18 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         settings.title_font_url = nullptr;
 
         _projectM = projectm_create_settings(&settings, PROJECTM_FLAG_NONE);
+        const char* helpMenuText = "\n"
+            "F1: This help menu""\n"
+            "F3: Show preset name""\n"
+            "F5: Show FPS""\n"
+            "Space: Lock/Unlock Preset""\n"
+            "R: Random preset""\n"
+            "N/P: [N]ext+ or [P]revious-reset""\n"
+            "M/Return: Preset Menu (Arrow Up/Down & Page Up/Down to Navigate)""\n"
+            "Arrow Up/Down: Increase or Decrease Beat Sensitivity""\n"
+            "CTRL-F or Right Click: Fullscreen""\n"
+            "CTRL-Q: Quit";
+        projectm_set_help_text(_projectM, helpMenuText);
 
         if (!_config->getBool("enableSplash", true))
         {
