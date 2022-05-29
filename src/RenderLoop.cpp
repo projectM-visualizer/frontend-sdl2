@@ -86,7 +86,14 @@ void RenderLoop::PollEvents()
                 }
                 else
                 {
-                    KeyEvent(event.key);
+                    KeyEvent(event.key, true);
+                }
+                break;
+
+            case SDL_KEYUP:
+                if (!projectm_is_text_input_active(_projectMHandle, true))
+                {
+                    KeyEvent(event.key, false);
                 }
                 break;
 
@@ -113,7 +120,7 @@ void RenderLoop::PollEvents()
     }
 }
 
-void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event)
+void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
 {
     auto keyModifier{ static_cast<SDL_Keymod>(event.keysym.mod) };
     auto keyCode{ event.keysym.sym };
@@ -122,6 +129,38 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event)
     if (keyModifier & KMOD_LGUI || keyModifier & KMOD_RGUI || keyModifier & KMOD_LCTRL)
     {
         modifierPressed = true;
+    }
+
+    // Handle modifier keys and save state for use in other methods, e.g. mouse events
+    switch (keyCode)
+    {
+        case SDLK_LCTRL:
+        case SDLK_RCTRL:
+            _keyStates._ctrlPressed = down;
+            break;
+
+        case SDLK_LSHIFT:
+        case SDLK_RSHIFT:
+            _keyStates._shiftPressed = down;
+            break;
+
+        case SDLK_LALT:
+        case SDLK_RALT:
+            _keyStates._altPressed = down;
+            break;
+
+        case SDLK_LGUI:
+        case SDLK_RGUI:
+            _keyStates._metaPressed = down;
+            break;
+
+        default:
+            break;
+    }
+
+    if (!down)
+    {
+        return;
     }
 
     // Currently mapping all SDL keycodes manually to projectM, as the key handler API will be gone before the

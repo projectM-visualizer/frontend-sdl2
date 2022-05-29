@@ -14,6 +14,15 @@ public:
     void Run();
 
 protected:
+
+    struct ModifierKeyStates
+    {
+        bool _shiftPressed{false}; //!< L/R shift keys
+        bool _ctrlPressed{false}; //!< L/R control keys
+        bool _altPressed{false}; //!< L/R alt keys
+        bool _metaPressed{false}; //!< Logo/meta/command key
+    };
+
     /**
      * @brief Polls all SDL events in the queue and takes action if required.
      */
@@ -23,7 +32,7 @@ protected:
      * @brief Handles SDL key press events.
      * @param event The key event.
      */
-    void KeyEvent(const SDL_KeyboardEvent& event);
+    void KeyEvent(const SDL_KeyboardEvent& event, bool down);
 
     /**
      * @brief Handles SDL key press events when inside preset search mode.
@@ -69,6 +78,8 @@ protected:
 
     int _renderWidth{ 0 };
     int _renderHeight{ 0 };
+
+    ModifierKeyStates _keyStates; //!< Current "pressed" states of modifier keys
 
     Poco::Logger& _logger{ Poco::Logger::get("RenderLoop") }; //!< The class logger.
 };
