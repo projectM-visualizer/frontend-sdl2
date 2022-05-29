@@ -33,6 +33,11 @@ public:
 
 
 protected:
+    /**
+     * @brief Sets the text of the help menu overlay.
+     */
+    void SetHelpText();
+
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
 
     projectm* _projectM{ nullptr }; //!< Pointer to the projectM instance used by the application.
