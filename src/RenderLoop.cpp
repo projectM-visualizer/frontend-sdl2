@@ -405,7 +405,7 @@ void RenderLoop::MouseDownEvent(const SDL_MouseButtonEvent& event)
     switch (event.button)
     {
         case SDL_BUTTON_LEFT:
-            if (!_mouseDown)
+            if (!_mouseDown && _keyStates._shiftPressed)
             {
                 // ToDo: Improve this to differentiate between single click (add waveform) and drag (move waveform).
                 int x;
