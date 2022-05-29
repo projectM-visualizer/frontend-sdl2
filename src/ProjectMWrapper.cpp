@@ -64,6 +64,8 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
                 projectm_select_next_preset(_projectM, true);
             }
         }
+
+        SetHelpText();
     }
 }
 
@@ -92,4 +94,39 @@ void ProjectMWrapper::RenderFrame() const
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     projectm_render_frame(_projectM);
+}
+
+void ProjectMWrapper::SetHelpText()
+{
+    // Create a help menu specific to SDL
+    std::string modKey = "CTRL";
+
+#if __APPLE__
+    modKey = "CMD";
+#endif
+
+    std::string helpText = "\n"
+                           "F1: This help menu\n"
+                           "F3: Show preset name\n"
+                           "F4: Show details and statistics\n"
+                           "F5: Show FPS\n"
+                           "ENTER: Open preset search menu\n"
+                           "SPACE: Lock/unlock preset\n"
+                           "R: Random preset\n"
+                           "M: Open preset list\n"
+                           "N: Next preset\n"
+                           "P: Previous preset\n"
+                           "UP: Increase beat sensitivity\n"
+                           "DOWN: Decrease beat sensitivity\n"
+                           "\n"
+                           "SHIFT+Left Click: Add random waveform\n"
+                           "Middle Click: Remove all random waveforms\n"
+                           "Right Click: Toggle fullscreen\n"
+                           "\n" +
+                           modKey + "+I: Next audio input device\n" +
+                           modKey + "+M: Change monitor\n" +
+                           modKey + "+F: Toggle fullscreen\n" +
+                           modKey + "+Q: Quit projectM";
+
+    projectm_set_help_text(_projectM, helpText.c_str());
 }
