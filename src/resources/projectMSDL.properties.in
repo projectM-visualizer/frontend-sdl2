@@ -28,22 +28,55 @@ window.height = 768
 # This will limit max FPS to the vertical sync frequency but prevent tearing.
 window.waitForVerticalSync = true
 
+
 ### projectM settings
+
+# Path where projectMSDL will search for presets and textures. The directory will be searched recursively.
+projectM.presetPath = @DEFAULT_PRESET_PATH@
+
+# Optional path where projectMSDL will search for additional textures. The directory will be searched recursively.
+# Note that textures found under "presetPath" will override textures in the texturePath dir.
+#projectM.texturePath =
 
 # If true, displays the built-in projectM logo preset on startup.
 projectM.enableSplash = false
 
+# Preset display duration in seconds. If the time has passed, a soft cut is done to the next preset.
+projectM.displayDuration = 30
+
+# If enabled, presets are selected randomly from the current playlist. Otherwise, they are played in order.
+projectM.shuffleEnabled = true
+
 # Target FPS, usually 60.
 projectM.fps = 60
-# Render mesh size. This is the grid in which "per-pixel" code is executed, once per cell.
+
+# Per-pixel mesh size. This is the grid in which "per-pixel" code is executed, once per cell.
+# Do net set this value too high, as it severely impacts performance. On low-end hardware, set this to a smal
+# value, e.g. 64x32. This does *NOT* affect the actual render/shader resolution!
 projectM.meshX = 200
 projectM.meshY = 125
 
 # Transition time in seconds for soft cuts
 projectM.transitionDuration = 3
 
-# Path where projectMSDL will search for presets and textures. The directory will be searched recursively.
-projectM.presetPath = @DEFAULT_PRESET_PATH@
+# Hard cuts are immediate presets transitions on an intensive beat.
+# If enabled, after "hardCutDuration" seconds have passed and an intensive beat is detected,
+# a hard cut is performed. "hardCutDuration" should be set lower than "displayDuration" to have an effect.
+projectM.hardCutsEnabled = false
+projectM.hardCutDuration = 20
+
+# Controls aspect ration correction in presets. Not all presets use aspect ratio, so this setting  only has an effect
+# on presets using the aspect ration actively.
+projectM.aspectCorrectionEnabled = true
+
+
+### Logging settings
+
+# For detailed information on how to configure logging, please refer to the POCO documentation:
+# https://docs.pocoproject.org/current/Poco.Util.LoggingConfigurator.html
+
+# Set log level to debug for all components
+#logging.loggers.root.level = debug
 
 
 
