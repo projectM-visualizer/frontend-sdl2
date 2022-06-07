@@ -77,6 +77,10 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<path>", true)
                           .binding("projectM.presetPath", _commandLineOverrides));
 
+    options.addOption(Option("texturePath", "", "Additional path with textures/images.",
+                             false, "<path>", true)
+                          .binding("projectM.texturePath", _commandLineOverrides));
+
     options.addOption(Option("enableSplash", "s", "If true, initially displays the built-in projectM logo preset.",
                              false, "<0/1>", true)
                           .binding("projectM.enableSplash", _commandLineOverrides));
