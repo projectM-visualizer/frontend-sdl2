@@ -25,6 +25,7 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         sdlWindow.GetDrawableSize(canvasWidth, canvasHeight);
 
         auto presetPath = _config->getString("presetPath", app.config().getString("application.dir", ""));
+        auto texturePath = _config->getString("texturePath", app.config().getString("", ""));
 
         projectm_settings settings{};
 
@@ -44,12 +45,17 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         settings.hard_cut_sensitivity = static_cast<float>(_config->getDouble("hardCutSensitivity", 1.0));
         settings.beat_sensitivity = static_cast<float>(_config->getDouble("beatSensitivity", 1.0));
         settings.shuffle_enabled = _config->getBool("shuffleEnabled", true);
-        settings.preset_url = &presetPath[0];
+        if (!presetPath.empty())
+        {
+            settings.preset_path = &presetPath[0];
+        }
+        if (!texturePath.empty())
+        {
+            settings.texture_path = &texturePath[0];
+        }
 
         // Unsupported settings
         settings.soft_cut_ratings_enabled = false;
-        settings.menu_font_url = nullptr;
-        settings.title_font_url = nullptr;
 
         _projectM = projectm_create_settings(&settings, PROJECTM_FLAG_NONE);
 
