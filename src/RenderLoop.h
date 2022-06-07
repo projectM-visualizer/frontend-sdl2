@@ -29,6 +29,11 @@ protected:
     void PollEvents();
 
     /**
+     * @brief Checks if the GL viewport size has changed and if so, reconfigured projectM accordingly.
+     */
+    void CheckViewportSize();
+
+    /**
      * @brief Handles SDL key press events.
      * @param event The key event.
      */

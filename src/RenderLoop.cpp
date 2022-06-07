@@ -33,6 +33,7 @@ void RenderLoop::Run()
     {
         limiter.StartFrame();
         PollEvents();
+        CheckViewportSize();
         _audioCapture.FillBuffer();
         _projectMWrapper.RenderFrame();
         _sdlRenderingWindow.Swap();
@@ -50,32 +51,6 @@ void RenderLoop::PollEvents()
     {
         switch (event.type)
         {
-            case SDL_WINDOWEVENT:
-                switch (event.window.event)
-                {
-                    case SDL_WINDOWEVENT_RESIZED:
-                    case SDL_WINDOWEVENT_SIZE_CHANGED:
-                    {
-                        int renderWidth;
-                        int renderHeight;
-                        _sdlRenderingWindow.GetDrawableSize(renderWidth, renderHeight);
-
-                        if (renderWidth != _renderWidth || renderHeight != _renderHeight)
-                        {
-                            projectm_set_window_size(_projectMHandle, renderWidth, renderHeight);
-                            _renderWidth = renderWidth;
-                            _renderHeight = renderHeight;
-
-                            poco_debug_f2(_logger, "Resized rendering canvas to %?dx%?d.", renderWidth, renderHeight);
-                        }
-                    }
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-
             case SDL_MOUSEWHEEL:
                 ScrollEvent(event.wheel);
                 break;
@@ -118,6 +93,22 @@ void RenderLoop::PollEvents()
                 _wantsToQuit = true;
                 break;
         }
+    }
+}
+
+void RenderLoop::CheckViewportSize()
+{
+    int renderWidth;
+    int renderHeight;
+    _sdlRenderingWindow.GetDrawableSize(renderWidth, renderHeight);
+
+    if (renderWidth != _renderWidth || renderHeight != _renderHeight)
+    {
+        projectm_set_window_size(_projectMHandle, renderWidth, renderHeight);
+        _renderWidth = renderWidth;
+        _renderHeight = renderHeight;
+
+        poco_debug_f2(_logger, "Resized rendering canvas to %?dx%?d.", renderWidth, renderHeight);
     }
 }
 
