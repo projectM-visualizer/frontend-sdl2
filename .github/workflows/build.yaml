@@ -22,11 +22,11 @@ jobs:
       - name: Get libprojectM
         run: git clone --depth 1 https://github.com/projectM-visualizer/projectm.git
       - run: |
-        cd projectm
-        mkdir build
-        cd build
-        cmake ..
-        make -j4
+          cd projectm
+          mkdir build
+          cd build
+          cmake ..
+          make -j4
 
       - run: make install
 
