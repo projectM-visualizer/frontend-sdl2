@@ -47,3 +47,10 @@ Press F1 for help menu.
 ## Developing
 
 This project uses cmake, which can generate project files for your favorite IDE.
+
+To generate an Xcode project:
+
+```shell
+make clean
+cmake -G Xcode -S . -B build
+```
