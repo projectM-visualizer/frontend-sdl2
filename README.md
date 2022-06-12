@@ -17,7 +17,7 @@ First, [build](https://github.com/projectM-visualizer/projectm/wiki/Building-lib
 (Assumes you have dependencies installed for libprojectM)
 
 ```shell
-apt install libsdl2-dev  # debian/ubuntu
+apt install libsdl2-dev libpoco-dev  # debian/ubuntu
 brew install sdl2  # macOS
 ```
 
