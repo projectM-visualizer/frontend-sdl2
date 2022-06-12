@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - run: sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev
+      - run: sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev
 
       - name: Get libprojectM
         run: git clone --depth 1 https://github.com/projectM-visualizer/projectm.git
