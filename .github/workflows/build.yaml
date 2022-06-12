@@ -2,17 +2,9 @@ name: Build
 
 on: [ push, pull_request ]
 
-env:
-  BUILD_TYPE: RelWithDebInfo
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-    #     os: [ windows-latest, ubuntu-latest, macos-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -21,16 +13,18 @@ jobs:
 
       - name: Get libprojectM
         run: git clone --depth 1 https://github.com/projectM-visualizer/projectm.git
-      - run: |
+      - name: Build libprojectM
+        run: |
           cd projectm
           mkdir build
           cd build
           cmake ..
           make -j4
 
-      - run: cd projectm/build && sudo make install
+      - name: Install projectM
+        run: cd projectm/build && sudo make install
 
-      - name: CMake
+      - name: Build frontend-sdl2
         run: |
           mkdir build
           cd build
