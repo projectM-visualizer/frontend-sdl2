@@ -28,5 +28,11 @@ jobs:
           cmake ..
           make -j4
 
-      - run: make install
+      - run: cd projectm/build && make install
 
+      - name: CMake
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j4
