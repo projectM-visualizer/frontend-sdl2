@@ -25,7 +25,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
             )
     target_compile_definitions(projectMSDL
             PRIVATE
-            AUDIO_IMPL="AudioCaptureImpl_WASAPI.h"
+            AUDIO_IMPL_HEADER="AudioCaptureImpl_WASAPI.h"
             )
 else()
     target_sources(projectMSDL
