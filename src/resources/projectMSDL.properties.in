@@ -21,8 +21,8 @@ window.fullscreen.width = 0
 window.fullscreen.height = 0
 
 # Window size if not in fullscreen
-window.width = 800
-window.height = 600
+window.width = 1024
+window.height = 768
 
 # Wait for vertical sync interval before displaying the next frame.
 # This will limit max FPS to the vertical sync frequency but prevent tearing.
