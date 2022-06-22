@@ -33,6 +33,7 @@ void RenderLoop::Run()
     {
         limiter.StartFrame();
         PollEvents();
+        _audioCapture.FillBuffer();
         _projectMWrapper.RenderFrame();
         _sdlRenderingWindow.Swap();
         limiter.EndFrame();

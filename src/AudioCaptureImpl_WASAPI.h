@@ -43,6 +43,11 @@ public:
      */
     std::string AudioDeviceName() const;
 
+    /**
+     * @brief Asks the capture client to fill projectM's audio buffer for the next frame.
+     */
+    void FillBuffer();
+
 protected:
 
     Poco::Logger& _logger{ Poco::Logger::get("AudioCapture.SDL") }; //!< The class logger.
