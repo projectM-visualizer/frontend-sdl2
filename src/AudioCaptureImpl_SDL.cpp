@@ -60,8 +60,8 @@ void AudioCaptureImpl::NextAudioDevice()
 {
     StopRecording();
 
-    // Will not go back to default capture device if toggled manually.
-    int nextAudioDeviceId = (_currentAudioDeviceIndex + 1) % SDL_GetNumAudioDevices(true);
+    // Will wrap around to default capture device (-1).
+    int nextAudioDeviceId = ((_currentAudioDeviceIndex + 2) % (SDL_GetNumAudioDevices(true) + 1)) - 1;
 
     StartRecording(_projectMHandle, nextAudioDeviceId);
 }
