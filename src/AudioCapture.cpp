@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "AudioCapture.h"
 
 #include "ProjectMWrapper.h"
@@ -55,10 +53,10 @@ void AudioCapture::PrintDeviceList(const std::map<int, std::string>& deviceList)
 {
     if (_config->getBool("listDevices", false))
     {
-        std::cout << "Available audio capturing devices:" << std::endl;
-        for (const auto& device: deviceList)
+        poco_information(_logger, "Available audio capturing devices:");
+        for (const auto& device : deviceList)
         {
-            std::cout << "    " << device.first << " = " << device.second << std::endl;
+            poco_information_f2(_logger, "    %?d = %s", device.first, device.second);
         }
     }
 }
