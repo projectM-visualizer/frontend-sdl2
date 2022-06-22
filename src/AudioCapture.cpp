@@ -49,6 +49,16 @@ std::string AudioCapture::AudioDeviceName() const
     return _impl->AudioDeviceName();
 }
 
+void AudioCapture::FillBuffer()
+{
+    if (!_impl)
+    {
+        return;
+    }
+
+    _impl->FillBuffer();
+}
+
 void AudioCapture::PrintDeviceList(const std::map<int, std::string>& deviceList) const
 {
     if (_config->getBool("listDevices", false))

@@ -19,3 +19,7 @@ std::string AudioCaptureImpl::AudioDeviceName() const
 {
     return "";
 }
+
+void AudioCaptureImpl::FillBuffer()
+{
+}

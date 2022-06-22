@@ -51,6 +51,15 @@ public:
      */
     std::string AudioDeviceName() const;
 
+    /**
+     * @brief Asks the capture client to fill projectM's audio buffer for the next frame.
+     *
+     * As of now, SDL uses async callbacks to directly fill projectM's audio buffer.
+     *
+     * @todo Store audio samples internally and push them to projectM when requested.
+     */
+    void FillBuffer() {};
+
 protected:
     /**
      * @brief Opens the SDL audio device with the currently selected index.
