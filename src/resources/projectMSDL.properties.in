@@ -1,10 +1,7 @@
-
-logging.loggers.root.level = debug
-
-# Application window settings
+### Application window settings
 
 # If set to true, the application will start in fullscreen mode
-window.fullscreen = true
+window.fullscreen = false
 
 # Set the monitor to initially display the window on.
 # 0 will use system defaults for placement, 1 and above select a specific monitor.
