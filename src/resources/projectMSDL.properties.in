@@ -44,3 +44,51 @@ projectM.transitionDuration = 3
 
 # Path where projectMSDL will search for presets and textures. The directory will be searched recursively.
 projectM.presetPath = @DEFAULT_PRESET_PATH@
+
+
+
+### Logging configuration
+
+# Verbose log format, includes process/thread ID, source etc.
+# See https://docs.pocoproject.org/current/Poco.PatternFormatter.html for available placeholders.
+# The "times" property can be either set to "local" (default) or "UTC".
+logging.formatters.verbose.class = PatternFormatter
+logging.formatters.verbose.pattern = %Y-%m-%dT%h:%M:%S.%iZ [%P][%I] %p: [%s] %t
+logging.formatters.verbose.times = local
+
+# Simple log format, only date/time and the message
+logging.formatters.simple.class = PatternFormatter
+logging.formatters.simple.pattern = %Y-%m-%dT%h:%M:%SZ %t
+logging.formatters.simple.times = local
+
+# Default file log, creates a new one if it reaches 1 MiB and keeps a single old log.
+# See https://docs.pocoproject.org/current/Poco.FileChannel.html for all possible options.
+logging.channels.file.class = FileChannel
+logging.channels.file.path = ${system.configHomeDir}/projectM/${application.baseName}.log
+logging.channels.file.rotation = 1M
+logging.channels.file.archive = number
+logging.channels.file.compress = false
+logging.channels.file.purgeCount = 1
+logging.channels.file.flush = false
+logging.channels.file.formatter = simple
+
+# Console logging. Only available on UNIX platforms and inside a Windows debugging session.
+logging.channels.console.class = ConsoleChannel
+logging.channels.console.formatter = simple
+
+# Duplicates log messages to both console and file channels.
+logging.channels.split.class = SplitterChannel
+logging.channels.split.channel = console,file
+
+# Memory queue for async logging to improve performance.
+logging.channels.async.class = AsyncChannel
+logging.channels.async.channel = split
+
+# Default logging settings.
+logging.loggers.root.level = information
+logging.loggers.root.channel = async
+
+# You can configure log levels, channels etc. for each message source (logger) individually.
+# See https://docs.pocoproject.org/current/Poco.Util.LoggingConfigurator.html for details.
+# Example:
+#     logging.loggers.AudioCapture.level = debug
