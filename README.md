@@ -17,7 +17,7 @@ First, [build](https://github.com/projectM-visualizer/projectm/wiki/Building-lib
 (Assumes you have dependencies installed for libprojectM)
 
 ```shell
-apt install libsdl2-dev libpoco-dev  # debian/ubuntu
+apt install libsdl2-dev libpoco-dev cmake  # debian/ubuntu
 brew install sdl2  # macOS
 ```
 
@@ -39,7 +39,7 @@ You should have a directory of visual presets you wish to use. You can fetch a g
 Provide the presets path you wish to use when starting projectMSDL:
 
 ```shell
-src/projectMSDL --presets /path/to/presets-cream-of-the-crop
+src/projectMSDL --presetPath /path/to/presets-cream-of-the-crop
 ```
 
 Press F1 for help menu.
