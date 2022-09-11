@@ -32,11 +32,11 @@ window.waitForVerticalSync = true
 ### projectM settings
 
 # Path where projectMSDL will search for presets and textures. The directory will be searched recursively.
-projectM.presetPath = @DEFAULT_PRESET_PATH@
+projectM.presetPath = @DEFAULT_PRESETS_PATH@
 
 # Optional path where projectMSDL will search for additional textures. The directory will be searched recursively.
 # Note that textures found under "presetPath" will override textures in the texturePath dir.
-#projectM.texturePath =
+projectM.texturePath = @DEFAULT_TEXTURES_PATH@
 
 # If true, displays the built-in projectM logo preset on startup.
 projectM.enableSplash = false
