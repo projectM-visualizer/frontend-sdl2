@@ -1,5 +1,6 @@
 
-configure_file(resources/projectMSDL.properties.in ${CMAKE_CURRENT_BINARY_DIR}/projectMSDL.properties @ONLY)
+set(PROJECTM_CONFIGURATION_FILE "${CMAKE_CURRENT_BINARY_DIR}/projectMSDL.properties" PARENT_SCOPE)
+configure_file(resources/projectMSDL.properties.in ${PROJECTM_CONFIGURATION_FILE} @ONLY)
 
 add_executable(projectMSDL WIN32
         AudioCapture.cpp
