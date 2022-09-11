@@ -25,7 +25,15 @@ std::map<int, std::string> AudioCaptureImpl::AudioDeviceList()
 
     for (int i = 0; i < recordingDeviceCount; i++)
     {
-        deviceList.insert(std::make_pair(i, SDL_GetAudioDeviceName(i, true)));
+        auto deviceName = SDL_GetAudioDeviceName(i, true);
+        if (deviceName)
+        {
+            deviceList.insert(std::make_pair(i, deviceName));
+        }
+        else
+        {
+            poco_error_f2(_logger, "Could not get device name for device ID %d: %s", i, std::string(SDL_GetError()));
+        }
     }
 
     return deviceList;
@@ -68,7 +76,14 @@ void AudioCaptureImpl::NextAudioDevice()
 
 std::string AudioCaptureImpl::AudioDeviceName() const
 {
-    return SDL_GetAudioDeviceName(_currentAudioDeviceIndex, true);
+    if (_currentAudioDeviceIndex >= 0)
+    {
+        return SDL_GetAudioDeviceName(_currentAudioDeviceIndex, true);
+    }
+    else
+    {
+        return "Default capturing device";
+    }
 }
 
 bool AudioCaptureImpl::OpenAudioDevice()
