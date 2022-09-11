@@ -22,6 +22,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(PROJECTM_LINKAGE "shared" CACHE STRING "Set to either shared or static to specify how libprojectM should be linked. Defaults to shared.")
 set(SDL2_LINKAGE "shared" CACHE STRING "Set to either shared or static to specify how libSDL2 should be linked. Defaults to shared.")
 
+set(DEFAULT_PRESETS_PATH "\${application.dir}/presets" CACHE STRING "Default presets path in the configuration file.")
+set(DEFAULT_TEXTURES_PATH "\${application.dir}/textures" CACHE STRING "Default textures path in the configuration file.")
+
 if(NOT PROJECTM_LINKAGE STREQUAL "shared" AND NOT PROJECTM_LINKAGE STREQUAL "static")
     message(FATAL_ERROR "Invalid libprojectM linkage provided in PROJECTM_LINKAGE: \"${PROJECTM_LINKAGE}\".\n"
                         "Please specify either \"shared\" or \"static\"."
