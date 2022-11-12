@@ -133,6 +133,4 @@ void ProjectMWrapper::SetHelpText()
                            modKey + "+M: Change monitor\n" +
                            modKey + "+F: Toggle fullscreen\n" +
                            modKey + "+Q: Quit projectM";
-
-    projectm_set_help_text(_projectM, helpText.c_str());
 }

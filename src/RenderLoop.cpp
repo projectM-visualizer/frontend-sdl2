@@ -56,21 +56,11 @@ void RenderLoop::PollEvents()
                 break;
 
             case SDL_KEYDOWN:
-                if (projectm_is_text_input_active(_projectMHandle, true))
-                {
-                    SearchKeyEvent(event.key);
-                }
-                else
-                {
-                    KeyEvent(event.key, true);
-                }
+                KeyEvent(event.key, true);
                 break;
 
             case SDL_KEYUP:
-                if (!projectm_is_text_input_active(_projectMHandle, true))
-                {
-                    KeyEvent(event.key, false);
-                }
+                KeyEvent(event.key, false);
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
@@ -79,14 +69,6 @@ void RenderLoop::PollEvents()
 
             case SDL_MOUSEBUTTONUP:
                 MouseUpEvent(event.button);
-                break;
-
-            case SDL_TEXTINPUT:
-                if (projectm_is_text_input_active(_projectMHandle, true))
-                {
-                    projectm_set_search_text(_projectMHandle, event.text.text);
-                    projectm_populate_preset_menu(_projectMHandle);
-                }
                 break;
 
             case SDL_QUIT:
@@ -164,8 +146,6 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         {
             bool aspectCorrectionEnabled = !projectm_get_aspect_correction(_projectMHandle);
             projectm_set_aspect_correction(_projectMHandle, aspectCorrectionEnabled);
-            projectm_set_toast_message(_projectMHandle, aspectCorrectionEnabled ? "Aspect Correction Enabled"
-                                                                                : "Aspect Correction Disabled");
         }
             break;
 
@@ -173,7 +153,6 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         case SDLK_d:
             // Write next rendered frame to file
             projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_d, PROJECTM_KMOD_NONE);
-            projectm_set_toast_message(_projectMHandle, "Main Texture Captured");
             break;
 #endif
 
@@ -193,7 +172,6 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             if (modifierPressed)
             {
                 _audioCapture.NextAudioDevice();
-                projectm_set_toast_message(_projectMHandle, _audioCapture.AudioDeviceName().c_str());
             }
             break;
 
@@ -231,7 +209,6 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         {
             bool shuffleEnabled = !projectm_get_shuffle_enabled(_projectMHandle);
             projectm_set_shuffle_enabled(_projectMHandle, shuffleEnabled);
-            projectm_set_toast_message(_projectMHandle, shuffleEnabled ? "Shuffle Enabled" : "Shuffle Disabled");
         }
             break;
 
@@ -334,10 +311,6 @@ void RenderLoop::SearchKeyEvent(const SDL_KeyboardEvent& event)
             {
                 _wantsToQuit = true;
             }
-            break;
-
-        case SDLK_BACKSPACE:
-            projectm_delete_search_text(_projectMHandle);
             break;
 
         case SDLK_RETURN:
