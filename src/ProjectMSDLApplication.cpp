@@ -77,6 +77,10 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<path>", true)
                           .binding("projectM.presetPath", _commandLineOverrides));
 
+    options.addOption(Option("presetFilter", "", "Load presets with the filter in their path, e.g. 'Dancer/Aurora'",
+                             false, "<text>", true)
+                          .binding("presetFilter", _commandLineOverrides));
+
     options.addOption(Option("texturePath", "", "Additional path with textures/images.",
                              false, "<path>", true)
                           .binding("projectM.texturePath", _commandLineOverrides));

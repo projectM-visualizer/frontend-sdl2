@@ -5,6 +5,7 @@
 #include <Poco/Util/Application.h>
 
 #include <SDL2/SDL.h>
+#include <fstream>
 
 RenderLoop::RenderLoop()
     : _audioCapture(Poco::Util::Application::instance().getSubsystem<AudioCapture>())
@@ -286,6 +287,22 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_DOWN, PROJECTM_KMOD_NONE);
             break;
 
+        case SDLK_MINUS:
+            unsigned int index = 0;
+            if (projectm_get_selected_preset_index(_projectMHandle, &index)) {
+                const char* presetName = projectm_get_preset_name(_projectMHandle, index);
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "add to blocklist.txt %s\n", presetName);
+
+                std::ofstream outfile;
+                outfile.open("blocklist.txt", std::ios_base::app);
+                outfile << presetName << "\n";
+
+                projectm_remove_preset(_projectMHandle, index);
+                projectm_select_preset(_projectMHandle, index, true);
+
+                projectm_free_string(presetName);
+            }
+            break;
     }
 }
 
@@ -421,7 +438,8 @@ void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
 void RenderLoop::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context)
 {
     auto that = reinterpret_cast<RenderLoop*>(context);
+    auto size = projectm_get_playlist_size(that->_projectMHandle);
     auto presetName = projectm_get_preset_name(that->_projectMHandle, index);
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset %d / %d: %s\n", index, size, presetName);
     projectm_free_string(presetName);
 }

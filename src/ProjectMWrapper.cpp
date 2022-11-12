@@ -5,6 +5,7 @@
 #include <Poco/Util/Application.h>
 
 #include <SDL2/SDL_opengl.h>
+#include <fstream>
 
 const char* ProjectMWrapper::name() const
 {
@@ -25,6 +26,7 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         sdlWindow.GetDrawableSize(canvasWidth, canvasHeight);
 
         auto presetPath = _config->getString("presetPath", app.config().getString("application.dir", ""));
+        auto presetFilter = _config->getString("presetFilter", "");
         auto texturePath = _config->getString("texturePath", app.config().getString("", ""));
 
         projectm_settings settings{};
@@ -58,6 +60,42 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         settings.soft_cut_ratings_enabled = false;
 
         _projectM = projectm_create_settings(&settings, PROJECTM_FLAG_NONE);
+
+        // remove any presets in blocklist.txt
+        std::ifstream infile("blocklist.txt");
+        std::string line;
+        for( std::string line; getline( infile, line ); )
+        {
+            unsigned int size = projectm_get_playlist_size(_projectM);
+            unsigned int index = projectm_get_preset_index(_projectM, line.c_str());
+            if (index < size) {
+                projectm_remove_preset(_projectM, index);
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INIT preset block '%s'\n", line.c_str());
+            }
+        }
+
+        // remove any presets that don't contain filter
+        if (presetFilter != "") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INIT preset filter '%s'\n", presetFilter.c_str());
+
+            unsigned int size = projectm_get_playlist_size(_projectM);
+
+            int offset = 0;
+            for (int i = 0; i < size; i++) {
+                std::string presetName(projectm_get_preset_name(_projectM, i - offset));
+                unsigned int presetIndex = projectm_get_preset_index(_projectM, presetName.c_str());
+                std::string presetFileName(projectm_get_preset_filename(_projectM, presetIndex));
+
+                // TODO projectm_free_string?
+
+                if (presetFileName.find(presetFilter) == std::string::npos) {
+                    projectm_remove_preset(_projectM, presetIndex);
+                    offset++;
+                } else {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "INIT preset add '%s'\n", presetFileName.c_str());
+                }
+            }
+        }
 
         if (!_config->getBool("enableSplash", true))
         {
