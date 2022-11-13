@@ -36,14 +36,20 @@ void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
 
     loadConfiguration(PRIO_DEFAULT);
 
-    // Try to load user's custom configuration file on top.
-    Poco::Path userConfigurationFile =
-        Poco::Path::configHome() + "projectM" + Poco::Path::separator() + "projectMSDL.properties";
-    if (Poco::File(userConfigurationFile).exists())
-    {
-        loadConfiguration(userConfigurationFile.toString(), PRIO_DEFAULT - 10);
-    }
+    // create config dir
+    Poco::Path configDir(config().getString("application.configDir"));
+    Poco::File(configDir).createDirectory();
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Config dir '%s'\n", configDir.toString().c_str());
 
+    // set default config
+    config().setString("projectM.presetExcludeFile", Poco::Path(configDir, "exclude.txt").toString());
+
+    // Try to load user's custom configuration file on top.
+    Poco::Path configFile = Poco::Path(configDir, "projectMSDL.properties");
+    if (Poco::File(configFile).exists())
+    {
+        loadConfiguration(configFile.toString(), PRIO_DEFAULT - 10);
+    }
 
     Application::initialize(self);
 }
@@ -77,9 +83,13 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<path>", true)
                           .binding("projectM.presetPath", _commandLineOverrides));
 
-    options.addOption(Option("presetFilter", "", "Load presets with the filter in their path, e.g. 'Dancer/Aurora'",
+    options.addOption(Option("presetExcludeFile", "", "File with additional list of presets to exclude",
+                             false, "<path>", true)
+                          .binding("projectM.presetExcludeFile", _commandLineOverrides));
+
+    options.addOption(Option("presetFilter", "", "Include only presets with the filter in their path, e.g. 'Dancer/Aurora'",
                              false, "<text>", true)
-                          .binding("presetFilter", _commandLineOverrides));
+                          .binding("projectM.presetFilter", _commandLineOverrides));
 
     options.addOption(Option("texturePath", "", "Additional path with textures/images.",
                              false, "<path>", true)

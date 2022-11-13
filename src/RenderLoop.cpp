@@ -288,14 +288,17 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             break;
 
         case SDLK_MINUS:
+            auto excludeFile = Poco::Util::Application::instance().config().getString("projectM.presetExcludeFile");
+
             unsigned int index = 0;
             if (projectm_get_selected_preset_index(_projectMHandle, &index)) {
                 const char* presetName = projectm_get_preset_name(_projectMHandle, index);
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "add to blocklist.txt %s\n", presetName);
 
                 std::ofstream outfile;
-                outfile.open("blocklist.txt", std::ios_base::app);
+                outfile.open(excludeFile, std::ios_base::app);
                 outfile << presetName << "\n";
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Add exclusion %s %s\n", excludeFile.c_str(), presetName);
 
                 projectm_remove_preset(_projectMHandle, index);
                 projectm_select_preset(_projectMHandle, index, true);
