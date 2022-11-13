@@ -423,9 +423,5 @@ void RenderLoop::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* c
     auto that = reinterpret_cast<RenderLoop*>(context);
     auto presetName = projectm_get_preset_name(that->_projectMHandle, index);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);
-
-    std::string newTitle = "projectM ➫ " + std::string(presetName);
     projectm_free_string(presetName);
-
-    that->_sdlRenderingWindow.SetTitle(newTitle);
 }
