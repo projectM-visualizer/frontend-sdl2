@@ -140,10 +140,25 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<number>", true)
                           .binding("projectM.displayDuration", _commandLineOverrides));
 
+    options.addOption(Option("transitionDuration", "", "Transition duration. Any number >= 0, default 3.",
+                             false, "<number>", true)
+                          .binding("projectM.transitionDuration", _commandLineOverrides));
+
+    options.addOption(Option("hardCutsEnabled", "", "Hard cuts enabled.",
+                             false, "<0/1>", true)
+                          .binding("projectM.hardCutsEnabled", _commandLineOverrides));
+
+    options.addOption(Option("hardCutDuration", "", "Hard cut duration. Any number > 1, default 20.",
+                             false, "<number>", true)
+                          .binding("projectM.hardCutDuration", _commandLineOverrides));
+
+    options.addOption(Option("hardCutSensitivity", "", "Hard cut sensitivity. Between 0.0 and 5.0. Default 1.0.",
+                             false, "<number>", true)
+                          .binding("projectM.hardCutSensitivity", _commandLineOverrides));
+
     options.addOption(Option("beatSensitivity", "", "Beat sensitivity. Between 0.0 and 5.0. Default 1.0.",
                              false, "<number>", true)
                           .binding("projectM.beatSensitivity", _commandLineOverrides));
-
 }
 
 int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)
