@@ -146,6 +146,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         {
             bool aspectCorrectionEnabled = !projectm_get_aspect_correction(_projectMHandle);
             projectm_set_aspect_correction(_projectMHandle, aspectCorrectionEnabled);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, aspectCorrectionEnabled ? "Aspect Correction Enabled" : "Aspect Correction Disabled");
         }
             break;
 
@@ -153,6 +154,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         case SDLK_d:
             // Write next rendered frame to file
             projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_d, PROJECTM_KMOD_NONE);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Main Texture Captured");
             break;
 #endif
 
@@ -172,6 +174,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             if (modifierPressed)
             {
                 _audioCapture.NextAudioDevice();
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s", _audioCapture.AudioDeviceName().c_str());
             }
             break;
 
@@ -209,6 +212,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         {
             bool shuffleEnabled = !projectm_get_shuffle_enabled(_projectMHandle);
             projectm_set_shuffle_enabled(_projectMHandle, shuffleEnabled);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, shuffleEnabled ? "Shuffle Enabled" : "Shuffle Disabled");
         }
             break;
 
