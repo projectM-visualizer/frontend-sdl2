@@ -30,8 +30,7 @@ AudioCaptureImpl::~AudioCaptureImpl()
 std::map<int, std::string> AudioCaptureImpl::AudioDeviceList()
 {
     std::map<int, std::string> deviceList{
-        { -1, "Default capturing device" }
-    };
+        {-1, "Default capturing device"}};
 
     auto recordingDeviceCount = SDL_GetNumAudioDevices(true);
 
@@ -141,12 +140,6 @@ void AudioCaptureImpl::AudioInputCallback(void* userData, unsigned char* stream,
 
     unsigned int samples = len / sizeof(float) / instance->_channels;
 
-    if (instance->_channels == 1)
-    {
-        projectm_pcm_add_float(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples, PROJECTM_MONO);
-    }
-    else if (instance->_channels == 2)
-    {
-        projectm_pcm_add_float(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples, PROJECTM_STEREO);
-    }
+    projectm_pcm_add_float(instance->_projectMHandle, reinterpret_cast<float*>(stream), samples,
+                           static_cast<projectm_channels>(instance->_channels));
 }
