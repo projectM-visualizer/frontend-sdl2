@@ -1,9 +1,21 @@
 #include "AudioCaptureImpl_SDL.h"
 
+#include <Poco/Util/Application.h>
+
 #include <libprojectM/projectM.h>
 
 AudioCaptureImpl::AudioCaptureImpl()
+    : _requestedSampleCount(projectm_pcm_get_max_samples())
 {
+    auto targetFps = Poco::Util::Application::instance().config().getUInt("projectM.fps", 60);
+    if (targetFps > 0)
+    {
+        _requestedSampleCount = std::min(_requestedSampleFrequency / targetFps, _requestedSampleCount);
+        // Don't let the buffer get too small to prevent excessive updates calls.
+        // 300 samples is enough for 144 FPS.
+        _requestedSampleCount = std::max(_requestedSampleCount, 300U);
+    }
+
 #ifdef SDL_HINT_AUDIO_INCLUDE_MONITORS
     SDL_SetHint(SDL_HINT_AUDIO_INCLUDE_MONITORS, "1");
 #endif
@@ -91,10 +103,10 @@ bool AudioCaptureImpl::OpenAudioDevice()
     SDL_AudioSpec requestedSpecs{};
     SDL_AudioSpec actualSpecs{};
 
-    requestedSpecs.freq = 44100;
+    requestedSpecs.freq = _requestedSampleFrequency;
     requestedSpecs.format = AUDIO_F32;
     requestedSpecs.channels = 2;
-    requestedSpecs.samples = projectm_pcm_get_max_samples();
+    requestedSpecs.samples = _requestedSampleCount;
     requestedSpecs.callback = AudioCaptureImpl::AudioInputCallback;
     requestedSpecs.userdata = this;
 
