@@ -1,8 +1,8 @@
 #include "PresetSelection.h"
 
+#include "AnonymousProFont.h"
 #include "ProjectMWrapper.h"
 #include "SDLRenderingWindow.h"
-#include "AnonymousProFont.h"
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -57,7 +57,7 @@ void PresetSelection::UpdateFontSize()
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    float dpi{96.0f};// Use default value of 96 DPI if SDL_GetDisplayDPI doesn't return a value!
+    float dpi{96.0f}; // Use default value of 96 DPI if SDL_GetDisplayDPI doesn't return a value!
     auto displayIndex = SDL_GetWindowDisplayIndex(_renderingWindow);
     if (displayIndex < 0)
     {
@@ -91,10 +91,8 @@ void PresetSelection::UpdateFontSize()
 void PresetSelection::ProcessInput(const SDL_Event& event)
 {
     ImGui_ImplSDL2_ProcessEvent(&event);
-    unsigned int position;
-    projectm_get_selected_preset_index(_projectMWrapper->ProjectM(), &position);
-    _playlistPosition = static_cast<int>(position);
-    _playlistSize = projectm_get_playlist_size(_projectMWrapper->ProjectM());
+    _playlistPosition = projectm_playlist_get_position(_projectMWrapper->Playlist());
+    _playlistSize = projectm_playlist_size(_projectMWrapper->Playlist());
 }
 
 void PresetSelection::Draw()
@@ -106,10 +104,10 @@ void PresetSelection::Draw()
     if (_settingsVisible)
     {
         DrawSettingsWindow();
-
     }
 
-    try {
+    try
+    {
 
         if (_fileChooser.Draw())
         {
@@ -117,15 +115,13 @@ void PresetSelection::Draw()
             std::string presetName = Poco::Path(_fileChooser.SelectedFile().path()).getFileName();
 
             int ratingList[2]{};
-            projectm_add_preset_url(_projectMWrapper->ProjectM(),
-                                    _fileChooser.SelectedFile().path().c_str(),
-                                    presetName.c_str(),
-                                    &ratingList[0], 2);
-            projectm_select_preset(_projectMWrapper->ProjectM(), projectm_get_playlist_size(_projectMWrapper->ProjectM()) - 1, true);
+            projectm_playlist_add_preset(_projectMWrapper->Playlist(),
+                                         _fileChooser.SelectedFile().path().c_str(),
+                                         false);
+            projectm_playlist_set_position(_projectMWrapper->Playlist(), projectm_playlist_size(_projectMWrapper->Playlist()) - 1, true);
         }
-
     }
-    catch(Poco::Exception& ex)
+    catch (Poco::Exception& ex)
     {
         poco_error_f1(_logger, "Exception in file chooser: %s", ex.message());
     }
@@ -159,9 +155,9 @@ void PresetSelection::DrawSettingsWindow()
             projectm_set_preset_duration(_projectMWrapper->ProjectM(), _displayDuration);
         }
 
-        if (ImGui::SliderInt("Playlist Position", &_playlistPosition, 0, _playlistSize - 1))
+        if (ImGui::SliderInt("Playlist Position", reinterpret_cast<int*>(&_playlistPosition), 0, _playlistSize - 1))
         {
-            projectm_select_preset(_projectMWrapper->ProjectM(), _playlistPosition, true);
+            projectm_playlist_set_position(_projectMWrapper->Playlist(), _playlistPosition, true);
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -175,14 +171,17 @@ void PresetSelection::DrawSettingsWindow()
 
         if (ImGui::Button("Random Preset"))
         {
-            projectm_select_random_preset(_projectMWrapper->ProjectM(), true);
+            bool shuffleEnabled = projectm_playlist_get_shuffle(_projectMWrapper->Playlist());
+            projectm_playlist_set_shuffle(_projectMWrapper->Playlist(), true);
+            projectm_playlist_play_next(_projectMWrapper->Playlist(), true);
+            projectm_playlist_set_shuffle(_projectMWrapper->Playlist(), shuffleEnabled);
         }
 
         ImGui::SameLine();
 
         if (ImGui::Button("Lock Preset"))
         {
-            projectm_lock_preset(_projectMWrapper->ProjectM(), !projectm_is_preset_locked(_projectMWrapper->ProjectM()));
+            projectm_set_preset_locked(_projectMWrapper->ProjectM(), !projectm_get_preset_locked(_projectMWrapper->ProjectM()));
         }
 
         ImGui::SameLine();
@@ -191,7 +190,6 @@ void PresetSelection::DrawSettingsWindow()
         {
             _fileChooser.Show();
         }
-
     }
     ImGui::End();
 }

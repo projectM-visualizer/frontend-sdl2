@@ -48,8 +48,8 @@ protected:
 
     bool _settingsVisible{ true }; //!< Flag for settings window visibility.
     float _displayDuration{ 0.0f }; //!< Preset display time
-    int _playlistPosition{ 0 }; //!< Playlist position
-    int _playlistSize{ 0 }; //!< Playlist size
+    uint32_t _playlistPosition{ 0 }; //!< Playlist position
+    uint32_t _playlistSize{ 0 }; //!< Playlist size
 
     Poco::Logger& _logger{ Poco::Logger::get("PresetSelectionGui") }; //!< The class logger.
 

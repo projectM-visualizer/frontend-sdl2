@@ -116,7 +116,7 @@ bool AudioCaptureImpl::OpenAudioDevice()
     if (_currentAudioDeviceID == 0)
     {
         poco_error_f3(_logger, R"(Failed to open audio device "%s" (ID %?d): %s)",
-                      std::string(deviceName ? deviceName : "System default capturing device"),
+                      std::string(deviceName != nullptr ? deviceName : "System default capturing device"),
                       _currentAudioDeviceIndex,
                       std::string(SDL_GetError()));
         return false;
@@ -125,7 +125,7 @@ bool AudioCaptureImpl::OpenAudioDevice()
     _channels = actualSpecs.channels;
 
     poco_information_f4(_logger, R"(Opened audio recording device "%s" (ID %?d) with %?d channels at %?d Hz.)",
-                        std::string(deviceName ? deviceName : "System default capturing device"),
+                        std::string(deviceName != nullptr ? deviceName : "System default capturing device"),
                         _currentAudioDeviceIndex,
                         actualSpecs.channels,
                         actualSpecs.freq);
