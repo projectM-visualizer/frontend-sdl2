@@ -37,7 +37,7 @@ if(NOT SDL2_LINKAGE STREQUAL "shared" AND NOT SDL2_LINKAGE STREQUAL "static")
             )
 endif()
 
-find_package(libprojectM REQUIRED)
+find_package(libprojectM REQUIRED COMPONENTS Playlist)
 find_package(SDL2 REQUIRED)
 find_package(Poco REQUIRED COMPONENTS Util)
 

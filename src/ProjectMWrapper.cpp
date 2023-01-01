@@ -19,59 +19,55 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
     {
         auto& sdlWindow = app.getSubsystem<SDLRenderingWindow>();
 
-        int canvasWidth{ 0 };
-        int canvasHeight{ 0 };
+        int canvasWidth{0};
+        int canvasHeight{0};
 
         sdlWindow.GetDrawableSize(canvasWidth, canvasHeight);
 
         auto presetPath = _config->getString("presetPath", app.config().getString("application.dir", ""));
         auto texturePath = _config->getString("texturePath", app.config().getString("", ""));
 
-        projectm_settings settings{};
+        _projectM = projectm_create();
 
-        // Window/rendering settings
-        settings.window_width = canvasWidth;
-        settings.window_height = canvasHeight;
-        settings.fps = _config->getInt("fps", 60);
-        settings.mesh_x = _config->getInt("meshX", 220);
-        settings.mesh_y = _config->getInt("meshY", 125);
-        settings.aspect_correction = _config->getBool("aspectCorrectionEnabled", true);
+        projectm_set_window_size(_projectM, canvasWidth, canvasHeight);
+        projectm_set_fps(_projectM, _config->getInt("fps", 60));
+        projectm_set_mesh_size(_projectM, _config->getInt("meshX", 220), _config->getInt("meshY", 125));
+        projectm_set_aspect_correction(_projectM, _config->getBool("aspectCorrectionEnabled", true));
 
         // Preset display settings
-        settings.preset_duration = _config->getInt("displayDuration", 30);
-        settings.soft_cut_duration = _config->getInt("transitionDuration", 3);
-        settings.hard_cut_enabled = _config->getBool("hardCutsEnabled", false);
-        settings.hard_cut_duration = _config->getInt("hardCutDuration", 20);
-        settings.hard_cut_sensitivity = static_cast<float>(_config->getDouble("hardCutSensitivity", 1.0));
-        settings.beat_sensitivity = static_cast<float>(_config->getDouble("beatSensitivity", 1.0));
-        settings.shuffle_enabled = _config->getBool("shuffleEnabled", true);
-        if (!presetPath.empty())
-        {
-            settings.preset_path = &presetPath[0];
-        }
+        projectm_set_preset_duration(_projectM, _config->getInt("displayDuration", 30));
+        projectm_set_soft_cut_duration(_projectM, _config->getInt("transitionDuration", 3));
+        projectm_set_hard_cut_enabled(_projectM, _config->getBool("hardCutsEnabled", false));
+        projectm_set_hard_cut_duration(_projectM, _config->getInt("hardCutDuration", 20));
+        projectm_set_hard_cut_sensitivity(_projectM, static_cast<float>(_config->getDouble("hardCutSensitivity", 1.0)));
+        projectm_set_beat_sensitivity(_projectM, static_cast<float>(_config->getDouble("beatSensitivity", 1.0)));
+
         if (!texturePath.empty())
         {
-            settings.texture_path = &texturePath[0];
+            const char* texturePathList[1]{&texturePath[0]};
+            projectm_set_texture_search_paths(_projectM, texturePathList, 1);
         }
 
-        // Unsupported settings
-        settings.soft_cut_ratings_enabled = false;
+        // Playlist
+        _playlist = projectm_playlist_create(_projectM);
 
-        _projectM = projectm_create_settings(&settings, PROJECTM_FLAG_NONE);
+        projectm_playlist_set_shuffle(_playlist, _config->getBool("shuffleEnabled", true));
+        if (!presetPath.empty())
+        {
+            projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
+        }
 
         if (!_config->getBool("enableSplash", true))
         {
-            if (settings.shuffle_enabled)
+            if (_config->getBool("shuffleEnabled", true))
             {
-                projectm_select_random_preset(_projectM, true);
+                projectm_playlist_play_next(_playlist, true);
             }
             else
             {
-                projectm_select_next_preset(_projectM, true);
+                projectm_playlist_set_position(_playlist, 0, true);
             }
         }
-
-        SetHelpText();
     }
 }
 
@@ -82,16 +78,28 @@ void ProjectMWrapper::uninitialize()
         projectm_destroy(_projectM);
         _projectM = nullptr;
     }
+
+    if (_playlist)
+    {
+        projectm_playlist_destroy(_playlist);
+        _playlist = nullptr;
+    }
 }
 
-projectm* ProjectMWrapper::ProjectM() const
+projectm_handle ProjectMWrapper::ProjectM() const
 {
     return _projectM;
 }
 
+projectm_playlist_handle ProjectMWrapper::Playlist() const
+{
+    return _playlist;
+}
+
 int ProjectMWrapper::TargetFPS()
 {
-    return _config->getInt("fps", 60);;
+    return _config->getInt("fps", 60);
+    ;
 }
 
 void ProjectMWrapper::RenderFrame() const
@@ -99,40 +107,5 @@ void ProjectMWrapper::RenderFrame() const
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    projectm_render_frame(_projectM);
-}
-
-void ProjectMWrapper::SetHelpText()
-{
-    // Create a help menu specific to SDL
-    std::string modKey = "CTRL";
-
-#if __APPLE__
-    modKey = "CMD";
-#endif
-
-    std::string helpText = "\n"
-                           "F1: This help menu\n"
-                           "F3: Show preset name\n"
-                           "F4: Show details and statistics\n"
-                           "F5: Show FPS\n"
-                           "ENTER: Open preset search menu\n"
-                           "SPACE: Lock/unlock preset\n"
-                           "R: Random preset\n"
-                           "M: Open preset list\n"
-                           "N: Next preset\n"
-                           "P: Previous preset\n"
-                           "UP: Increase beat sensitivity\n"
-                           "DOWN: Decrease beat sensitivity\n"
-                           "\n"
-                           "SHIFT+Left Click: Add random waveform\n"
-                           "Middle Click: Remove all random waveforms\n"
-                           "Right Click: Toggle fullscreen\n"
-                           "\n" +
-                           modKey + "+I: Next audio input device\n" +
-                           modKey + "+M: Change monitor\n" +
-                           modKey + "+F: Toggle fullscreen\n" +
-                           modKey + "+Q: Quit projectM";
-
-    projectm_set_help_text(_projectM, helpText.c_str());
+    projectm_opengl_render_frame(_projectM);
 }

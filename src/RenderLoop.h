@@ -14,9 +14,7 @@ public:
     void Run();
 
 protected:
-
-    struct ModifierKeyStates
-    {
+    struct ModifierKeyStates {
         bool _shiftPressed{false}; //!< L/R shift keys
         bool _ctrlPressed{false}; //!< L/R control keys
         bool _altPressed{false}; //!< L/R alt keys
@@ -75,17 +73,17 @@ protected:
     ProjectMWrapper& _projectMWrapper;
     SDLRenderingWindow& _sdlRenderingWindow;
 
-    projectm* _projectMHandle{ nullptr };
+    projectm_handle _projectMHandle{nullptr};
+    projectm_playlist_handle _playlistHandle{nullptr};
 
-    bool _wantsToQuit{ false };
+    bool _wantsToQuit{false};
 
-    bool _mouseDown{ false }; //!< Left mouse button is pressed
+    bool _mouseDown{false}; //!< Left mouse button is pressed
 
-    int _renderWidth{ 0 };
-    int _renderHeight{ 0 };
+    int _renderWidth{0};
+    int _renderHeight{0};
 
     ModifierKeyStates _keyStates; //!< Current "pressed" states of modifier keys
 
-    Poco::Logger& _logger{ Poco::Logger::get("RenderLoop") }; //!< The class logger.
+    Poco::Logger& _logger{Poco::Logger::get("RenderLoop")}; //!< The class logger.
 };
-

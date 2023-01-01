@@ -1,11 +1,12 @@
 #pragma once
 
 #include <libprojectM/projectM.h>
+#include <libprojectM/playlist.h>
 
 #include <Poco/Logger.h>
 
-#include <Poco/Util/Subsystem.h>
 #include <Poco/Util/AbstractConfiguration.h>
+#include <Poco/Util/Subsystem.h>
 
 #include <memory>
 
@@ -18,7 +19,13 @@ public:
      * Returns the projectM instance handle.
      * @return The projectM instance handle used to call API functions.
      */
-    projectm* ProjectM() const;
+    projectm_handle ProjectM() const;
+
+    /**
+     * Returns the playlist handle.
+     * @return The plaslist handle.
+     */
+    projectm_playlist_handle Playlist() const;
 
     /**
      * Renders a single projectM frame.
@@ -33,16 +40,10 @@ public:
 
 
 protected:
-    /**
-     * @brief Sets the text of the help menu overlay.
-     */
-    void SetHelpText();
-
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
 
-    projectm* _projectM{ nullptr }; //!< Pointer to the projectM instance used by the application.
+    projectm_handle _projectM{nullptr}; //!< Pointer to the projectM instance used by the application.
+    projectm_playlist_handle _playlist{nullptr}; //!< Pointer to the projectM playlist manager instance.
 
-    Poco::Logger& _logger{ Poco::Logger::get("SDLRenderingWindow") }; //!< The class logger.
+    Poco::Logger& _logger{Poco::Logger::get("SDLRenderingWindow")}; //!< The class logger.
 };
-
-

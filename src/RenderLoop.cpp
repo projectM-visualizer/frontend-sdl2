@@ -11,6 +11,7 @@ RenderLoop::RenderLoop()
     , _projectMWrapper(Poco::Util::Application::instance().getSubsystem<ProjectMWrapper>())
     , _sdlRenderingWindow(Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>())
     , _projectMHandle(_projectMWrapper.ProjectM())
+    , _playlistHandle(_projectMWrapper.Playlist())
 {
 }
 
@@ -19,15 +20,10 @@ void RenderLoop::Run()
     FPSLimiter limiter;
     limiter.TargetFPS(_projectMWrapper.TargetFPS());
 
-    projectm_set_preset_switched_event_callback(_projectMHandle, &RenderLoop::PresetSwitchedEvent,
-                                                static_cast<void*>(this));
+    projectm_playlist_set_preset_switched_event_callback(_playlistHandle, &RenderLoop::PresetSwitchedEvent, static_cast<void*>(this));
 
     // Update title bar with initial preset.
-    unsigned int currentIndex;
-    if (projectm_get_selected_preset_index(_projectMHandle, &currentIndex))
-    {
-        PresetSwitchedEvent(true, currentIndex, this);
-    }
+    PresetSwitchedEvent(true, projectm_playlist_get_position(_playlistHandle), this);
 
     while (!_wantsToQuit)
     {
@@ -40,7 +36,7 @@ void RenderLoop::Run()
         limiter.EndFrame();
     }
 
-    projectm_set_preset_switched_event_callback(_projectMHandle, nullptr, nullptr);
+    projectm_playlist_set_preset_switched_event_callback(_playlistHandle, nullptr, nullptr);
 }
 
 void RenderLoop::PollEvents()
@@ -56,21 +52,11 @@ void RenderLoop::PollEvents()
                 break;
 
             case SDL_KEYDOWN:
-                if (projectm_is_text_input_active(_projectMHandle, true))
-                {
-                    SearchKeyEvent(event.key);
-                }
-                else
-                {
-                    KeyEvent(event.key, true);
-                }
+                KeyEvent(event.key, true);
                 break;
 
             case SDL_KEYUP:
-                if (!projectm_is_text_input_active(_projectMHandle, true))
-                {
-                    KeyEvent(event.key, false);
-                }
+                KeyEvent(event.key, false);
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
@@ -79,14 +65,6 @@ void RenderLoop::PollEvents()
 
             case SDL_MOUSEBUTTONUP:
                 MouseUpEvent(event.button);
-                break;
-
-            case SDL_TEXTINPUT:
-                if (projectm_is_text_input_active(_projectMHandle, true))
-                {
-                    projectm_set_search_text(_projectMHandle, event.text.text);
-                    projectm_populate_preset_menu(_projectMHandle);
-                }
                 break;
 
             case SDL_QUIT:
@@ -114,9 +92,9 @@ void RenderLoop::CheckViewportSize()
 
 void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
 {
-    auto keyModifier{ static_cast<SDL_Keymod>(event.keysym.mod) };
-    auto keyCode{ event.keysym.sym };
-    bool modifierPressed{ false };
+    auto keyModifier{static_cast<SDL_Keymod>(event.keysym.mod)};
+    auto keyCode{event.keysym.sym};
+    bool modifierPressed{false};
 
     if (keyModifier & KMOD_LGUI || keyModifier & KMOD_RGUI || keyModifier & KMOD_LCTRL)
     {
@@ -160,20 +138,16 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
     // projectM's internal hotkey bindings.
     switch (keyCode)
     {
-        case SDLK_a:
-        {
+        case SDLK_a: {
             bool aspectCorrectionEnabled = !projectm_get_aspect_correction(_projectMHandle);
             projectm_set_aspect_correction(_projectMHandle, aspectCorrectionEnabled);
-            projectm_set_toast_message(_projectMHandle, aspectCorrectionEnabled ? "Aspect Correction Enabled"
-                                                                                : "Aspect Correction Disabled");
         }
-            break;
+        break;
 
 #ifdef _DEBUG
         case SDLK_d:
             // Write next rendered frame to file
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_d, PROJECTM_KMOD_NONE);
-            projectm_set_toast_message(_projectMHandle, "Main Texture Captured");
+            projectm_write_debug_image_on_next_frame(_projectMHandle);
             break;
 #endif
 
@@ -184,16 +158,10 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             }
             break;
 
-        case SDLK_h:
-            // Display help (same as F1)
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_h, PROJECTM_KMOD_NONE);
-            break;
-
         case SDLK_i:
             if (modifierPressed)
             {
                 _audioCapture.NextAudioDevice();
-                projectm_set_toast_message(_projectMHandle, _audioCapture.AudioDeviceName().c_str());
             }
             break;
 
@@ -203,22 +171,23 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
                 _sdlRenderingWindow.NextDisplay();
                 break;
             }
-
-            // Show preset selection menu
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_m, PROJECTM_KMOD_NONE);
             break;
 
         case SDLK_n:
-            projectm_select_next_preset(_projectMHandle, true);
+            projectm_playlist_play_next(_playlistHandle, true);
             break;
 
         case SDLK_p:
-            projectm_select_previous_preset(_projectMHandle, true);
+            projectm_playlist_play_previous(_playlistHandle, true);
             break;
 
-        case SDLK_r:
-            projectm_select_random_preset(_projectMHandle, true);
+        case SDLK_r: {
+            bool shuffleEnabled = projectm_playlist_get_shuffle(_playlistHandle);
+            projectm_playlist_set_shuffle(_playlistHandle, true);
+            projectm_playlist_play_next(_playlistHandle, true);
+            projectm_playlist_set_shuffle(_playlistHandle, shuffleEnabled);
             break;
+        }
 
         case SDLK_q:
             if (modifierPressed)
@@ -227,153 +196,27 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             }
             break;
 
-        case SDLK_y:
-        {
-            bool shuffleEnabled = !projectm_get_shuffle_enabled(_projectMHandle);
-            projectm_set_shuffle_enabled(_projectMHandle, shuffleEnabled);
-            projectm_set_toast_message(_projectMHandle, shuffleEnabled ? "Shuffle Enabled" : "Shuffle Disabled");
+        case SDLK_y: {
+            projectm_playlist_set_shuffle(_playlistHandle, !projectm_playlist_get_shuffle(_playlistHandle));
         }
+        break;
+
+        case SDLK_BACKSPACE:
+            projectm_playlist_play_last(_playlistHandle, true);
             break;
 
         case SDLK_SPACE:
-            projectm_lock_preset(_projectMHandle, !projectm_is_preset_locked(_projectMHandle));
-            break;
-
-        case SDLK_RETURN:
-            if (keyModifier & KMOD_LALT || keyModifier & KMOD_RALT)
-            {
-                _sdlRenderingWindow.ToggleFullscreen();
-                break;
-            }
-
-            SDL_StartTextInput();
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_RETURN, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_HOME:
-            // First preset in playlist or top of search results
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_HOME, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_END:
-            // Last preset in playlist or end of search results
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_END, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_F1:
-            // Display help
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_F1, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_F2:
-            // Display song title, currently unsupported.
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_F2, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_F3:
-            // Show preset name
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_F3, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_F4:
-            // Show rendering statistics
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_F4, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_F5:
-            // Show FPS
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_F5, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_PAGEUP:
-            // Select a preset half a search page up in the playlist
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_PAGEUP, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_PAGEDOWN:
-            // Select a preset half a search page down in the playlist
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_PAGEDOWN, PROJECTM_KMOD_NONE);
+            projectm_set_preset_locked(_projectMHandle, !projectm_get_preset_locked(_projectMHandle));
             break;
 
         case SDLK_UP:
             // Increase beat sensitivity
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_UP, PROJECTM_KMOD_NONE);
+            projectm_set_beat_sensitivity(_projectMHandle, projectm_get_beat_sensitivity(_projectMHandle) + 0.01f);
             break;
 
         case SDLK_DOWN:
             // Decrease beat sensitivity
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_DOWN, PROJECTM_KMOD_NONE);
-            break;
-
-    }
-}
-
-void RenderLoop::SearchKeyEvent(const SDL_KeyboardEvent& event)
-{
-    auto keyModifier{ static_cast<SDL_Keymod>(event.keysym.mod) };
-    auto keyCode{ event.keysym.sym };
-    bool modifierPressed{ false };
-
-    if (keyModifier & KMOD_LGUI || keyModifier & KMOD_RGUI || keyModifier & KMOD_LCTRL)
-    {
-        modifierPressed = true;
-    }
-
-
-    switch (keyCode)
-    {
-        case SDLK_f:
-            if (modifierPressed)
-            {
-                _sdlRenderingWindow.ToggleFullscreen();
-            }
-            break;
-
-        case SDLK_q:
-            if (modifierPressed)
-            {
-                _wantsToQuit = true;
-            }
-            break;
-
-        case SDLK_BACKSPACE:
-            projectm_delete_search_text(_projectMHandle);
-            break;
-
-        case SDLK_RETURN:
-        case SDLK_ESCAPE:
-            SDL_StopTextInput();
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_ESCAPE, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_HOME:
-            // Top of search results
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_HOME, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_END:
-            // End of search results
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_END, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_PAGEUP:
-            // Half a search page up
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_PAGEUP, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_PAGEDOWN:
-            // Half a search page down
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_PAGEDOWN, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_UP:
-            // Previous preset in search result list
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_UP, PROJECTM_KMOD_NONE);
-            break;
-
-        case SDLK_DOWN:
-            // Next preset in search result list
-            projectm_key_handler(_projectMHandle, PROJECTM_KEYDOWN, PROJECTM_K_DOWN, PROJECTM_KMOD_NONE);
+            projectm_set_beat_sensitivity(_projectMHandle, projectm_get_beat_sensitivity(_projectMHandle) - 0.01f);
             break;
     }
 }
@@ -383,12 +226,12 @@ void RenderLoop::ScrollEvent(const SDL_MouseWheelEvent& event)
     // Wheel up is positive
     if (event.y > 0)
     {
-        projectm_select_previous_preset(_projectMHandle, true);
+        projectm_playlist_play_next(_playlistHandle, true);
     }
-        // Wheel down is negative
+    // Wheel down is negative
     else if (event.y < 0)
     {
-        projectm_select_next_preset(_projectMHandle, true);
+        projectm_playlist_play_previous(_playlistHandle, true);
     }
 }
 
@@ -430,7 +273,6 @@ void RenderLoop::MouseDownEvent(const SDL_MouseButtonEvent& event)
             poco_debug(_logger, "Cleared all custom waveforms.");
             break;
     }
-
 }
 
 void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
@@ -444,7 +286,7 @@ void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
 void RenderLoop::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context)
 {
     auto that = reinterpret_cast<RenderLoop*>(context);
-    auto presetName = projectm_get_preset_name(that->_projectMHandle, index);
+    auto presetName = projectm_playlist_item(that->_playlistHandle, index);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);
 
     std::string newTitle = "projectM ➫ " + std::string(presetName);
