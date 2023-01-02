@@ -34,6 +34,12 @@ public:
 
     int TargetFPS();
 
+    /**
+     * @brief If splash is disabled, shows the initial preset.
+     * If shuffle is on, a random preset will be picked. Otherwise, the first playlist item is displayed.
+     */
+    void DisplayInitialPreset();
+
     void initialize(Poco::Util::Application& app) override;
 
     void uninitialize() override;

@@ -56,18 +56,6 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         {
             projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
         }
-
-        if (!_config->getBool("enableSplash", true))
-        {
-            if (_config->getBool("shuffleEnabled", true))
-            {
-                projectm_playlist_play_next(_playlist, true);
-            }
-            else
-            {
-                projectm_playlist_set_position(_playlist, 0, true);
-            }
-        }
     }
 }
 
@@ -108,4 +96,19 @@ void ProjectMWrapper::RenderFrame() const
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     projectm_opengl_render_frame(_projectM);
+}
+
+void ProjectMWrapper::DisplayInitialPreset()
+{
+    if (!_config->getBool("enableSplash", true))
+    {
+        if (_config->getBool("shuffleEnabled", true))
+        {
+            projectm_playlist_play_next(_playlist, true);
+        }
+        else
+        {
+            projectm_playlist_set_position(_playlist, 0, true);
+        }
+    }
 }

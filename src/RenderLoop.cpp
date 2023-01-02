@@ -22,8 +22,7 @@ void RenderLoop::Run()
 
     projectm_playlist_set_preset_switched_event_callback(_playlistHandle, &RenderLoop::PresetSwitchedEvent, static_cast<void*>(this));
 
-    // Update title bar with initial preset.
-    PresetSwitchedEvent(true, projectm_playlist_get_position(_playlistHandle), this);
+    _projectMWrapper.DisplayInitialPreset();
 
     while (!_wantsToQuit)
     {
