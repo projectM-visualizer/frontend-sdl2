@@ -206,6 +206,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
 
         case SDLK_SPACE:
             projectm_set_preset_locked(_projectMHandle, !projectm_get_preset_locked(_projectMHandle));
+            UpdateWindowTitle();
             break;
 
         case SDLK_UP:
@@ -286,10 +287,24 @@ void RenderLoop::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* c
 {
     auto that = reinterpret_cast<RenderLoop*>(context);
     auto presetName = projectm_playlist_item(that->_playlistHandle, index);
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);
-
-    std::string newTitle = "projectM ➫ " + std::string(presetName);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);;
     projectm_free_string(presetName);
 
-    that->_sdlRenderingWindow.SetTitle(newTitle);
+    that->UpdateWindowTitle();
+}
+
+void RenderLoop::UpdateWindowTitle()
+{
+    auto presetName = projectm_playlist_item(_playlistHandle, projectm_playlist_get_position(_playlistHandle));
+
+    Poco::Path presetFile(presetName);
+    projectm_free_string(presetName);
+
+    std::string newTitle = "projectM ➫ " + presetFile.getBaseName();
+    if (projectm_get_preset_locked(_projectMHandle))
+    {
+        newTitle += " [locked]";
+    }
+
+    _sdlRenderingWindow.SetTitle(newTitle);
 }

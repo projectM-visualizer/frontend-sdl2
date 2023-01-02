@@ -69,6 +69,11 @@ protected:
      */
     static void PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context);
 
+    /**
+     * Sets the window title to the current preset name.
+     */
+    void UpdateWindowTitle();
+
     AudioCapture& _audioCapture;
     ProjectMWrapper& _projectMWrapper;
     SDLRenderingWindow& _sdlRenderingWindow;
