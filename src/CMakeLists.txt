@@ -48,7 +48,6 @@ target_compile_definitions(projectMSDL
 
 target_link_libraries(projectMSDL
         PRIVATE
-        libprojectM::${PROJECTM_LINKAGE}
         libprojectM::playlist
         Poco::Util
         SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>
