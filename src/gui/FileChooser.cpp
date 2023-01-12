@@ -7,6 +7,12 @@
 
 #include <algorithm>
 
+FileChooser::FileChooser(std::string title, std::vector<std::string> extensions)
+    : _title(std::move(title))
+    , _extensions(std::move(extensions))
+{
+}
+
 void FileChooser::Show()
 {
     _visible = true;
@@ -21,13 +27,12 @@ bool FileChooser::Draw()
 
     bool fileSelected{false};
 
-    if (!_currentDir.isDirectory()
-        || (!_currentDir.toString().empty() && !Poco::File(_currentDir).exists()))
+    if (!_currentDir.isDirectory() || (!_currentDir.toString().empty() && !Poco::File(_currentDir).exists()))
     {
         ChangeDirectory(Poco::Path::home());
     }
 
-    if (ImGui::Begin("Load Preset", &_visible), ImGuiWindowFlags_NoCollapse)
+    if (ImGui::Begin(_title.c_str(), &_visible), ImGuiWindowFlags_NoCollapse)
     {
         DrawNavButtons();
 
@@ -105,7 +110,7 @@ void FileChooser::DrawNavButtons()
         poco_debug_f1(_logger, "Going to user's home dir: %s", _currentDir.toString());
     }
 
-    for (const auto& root: roots)
+    for (const auto& root : roots)
     {
         ImGui::SameLine();
 
@@ -214,15 +219,23 @@ void FileChooser::ChangeDirectory(const Poco::Path& newDirectory)
         {
         }
 
-        if (!isDirectory && Poco::icompare(directoryIterator.path().getExtension(), "milk") != 0)
+        if (!isDirectory && (!isHidden || _showhidden))
         {
-            ++directoryIterator;
-            continue;
-        }
-
-        if (!isHidden || _showhidden)
-        {
-            _currentFileList.push_back(*directoryIterator);
+            if (_extensions.empty())
+            {
+                _currentFileList.push_back(*directoryIterator);
+            }
+            else
+            {
+                auto fileExtension = directoryIterator.path().getExtension();
+                for (const auto& extension : _extensions)
+                {
+                    if (Poco::icompare(directoryIterator.path().getExtension(), extension) != 0)
+                    {
+                        _currentFileList.push_back(*directoryIterator);
+                    }
+                }
+            }
         }
 
         ++directoryIterator;

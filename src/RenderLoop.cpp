@@ -2,6 +2,10 @@
 
 #include "FPSLimiter.h"
 
+#include "gui/ProjectMGUI.h"
+
+#include <Poco/NotificationCenter.h>
+
 #include <Poco/Util/Application.h>
 
 #include <SDL2/SDL.h>
@@ -10,9 +14,9 @@ RenderLoop::RenderLoop()
     : _audioCapture(Poco::Util::Application::instance().getSubsystem<AudioCapture>())
     , _projectMWrapper(Poco::Util::Application::instance().getSubsystem<ProjectMWrapper>())
     , _sdlRenderingWindow(Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>())
-    , _presetSelectionGui(Poco::Util::Application::instance().getSubsystem<PresetSelection>())
     , _projectMHandle(_projectMWrapper.ProjectM())
     , _playlistHandle(_projectMWrapper.Playlist())
+    , _projectMGui(Poco::Util::Application::instance().getSubsystem<ProjectMGUI>())
 {
 }
 
@@ -21,7 +25,9 @@ void RenderLoop::Run()
     FPSLimiter limiter;
     limiter.TargetFPS(_projectMWrapper.TargetFPS());
 
-    projectm_playlist_set_preset_switched_event_callback(_playlistHandle, &RenderLoop::PresetSwitchedEvent, static_cast<void*>(this));
+    auto& notificationCenter{Poco::NotificationCenter::defaultCenter()};
+
+    notificationCenter.addObserver(_quitNotificationObserver);
 
     _projectMWrapper.DisplayInitialPreset();
 
@@ -33,12 +39,14 @@ void RenderLoop::Run()
         CheckViewportSize();
         _audioCapture.FillBuffer();
         _projectMWrapper.RenderFrame();
-        _presetSelectionGui.Draw();
+        _projectMGui.Draw();
 
         _sdlRenderingWindow.Swap();
 
         limiter.EndFrame();
     }
+
+    notificationCenter.removeObserver(_quitNotificationObserver);
 
     projectm_playlist_set_preset_switched_event_callback(_playlistHandle, nullptr, nullptr);
 }
@@ -49,13 +57,13 @@ void RenderLoop::PollEvents()
 
     while (SDL_PollEvent(&event))
     {
-        _presetSelectionGui.ProcessInput(event);
+        _projectMGui.ProcessInput(event);
 
         switch (event.type)
         {
             case SDL_MOUSEWHEEL:
 
-                if (!_presetSelectionGui.WantsMouseInput())
+                if (!_projectMGui.WantsMouseInput())
                 {
                     ScrollEvent(event.wheel);
                 }
@@ -63,15 +71,21 @@ void RenderLoop::PollEvents()
                 break;
 
             case SDL_KEYDOWN:
-                KeyEvent(event.key, true);
+                if (!_projectMGui.WantsKeyboardInput())
+                {
+                    KeyEvent(event.key, true);
+                }
                 break;
 
             case SDL_KEYUP:
-                KeyEvent(event.key, false);
+                if (!_projectMGui.WantsKeyboardInput())
+                {
+                    KeyEvent(event.key, false);
+                }
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
-                if (!_presetSelectionGui.WantsMouseInput())
+                if (!_projectMGui.WantsMouseInput())
                 {
                     MouseDownEvent(event.button);
                 }
@@ -79,7 +93,7 @@ void RenderLoop::PollEvents()
                 break;
 
             case SDL_MOUSEBUTTONUP:
-                if (!_presetSelectionGui.WantsMouseInput())
+                if (!_projectMGui.WantsMouseInput())
                 {
                     MouseUpEvent(event.button);
                 }
@@ -105,7 +119,7 @@ void RenderLoop::CheckViewportSize()
         _renderWidth = renderWidth;
         _renderHeight = renderHeight;
 
-        _presetSelectionGui.UpdateFontSize();
+        _projectMGui.UpdateFontSize();
 
         poco_debug_f2(_logger, "Resized rendering canvas to %?dx%?d.", renderWidth, renderHeight);
     }
@@ -154,11 +168,12 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
         return;
     }
 
-    // Currently mapping all SDL keycodes manually to projectM, as the key handler API will be gone before the
-    // 4.0 release, being replaced by API methods reflecting the action instead of requiring knowledge about
-    // projectM's internal hotkey bindings.
     switch (keyCode)
     {
+        case SDLK_ESCAPE:
+            _projectMGui.Toggle();
+            break;
+
         case SDLK_a: {
             bool aspectCorrectionEnabled = !projectm_get_aspect_correction(_projectMHandle);
             projectm_set_aspect_correction(_projectMHandle, aspectCorrectionEnabled);
@@ -195,18 +210,15 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             break;
 
         case SDLK_n:
-            projectm_playlist_play_next(_playlistHandle, true);
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::NextPreset));
             break;
 
         case SDLK_p:
-            projectm_playlist_play_previous(_playlistHandle, true);
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::PreviousPreset));
             break;
 
         case SDLK_r: {
-            bool shuffleEnabled = projectm_playlist_get_shuffle(_playlistHandle);
-            projectm_playlist_set_shuffle(_playlistHandle, true);
-            projectm_playlist_play_next(_playlistHandle, true);
-            projectm_playlist_set_shuffle(_playlistHandle, shuffleEnabled);
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::RandomPreset));
             break;
         }
 
@@ -217,28 +229,26 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
             }
             break;
 
-        case SDLK_y: {
-            projectm_playlist_set_shuffle(_playlistHandle, !projectm_playlist_get_shuffle(_playlistHandle));
-        }
-        break;
+        case SDLK_y:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::ToggleShuffle));
+            break;
 
         case SDLK_BACKSPACE:
-            projectm_playlist_play_last(_playlistHandle, true);
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::LastPreset));
             break;
 
         case SDLK_SPACE:
-            projectm_set_preset_locked(_projectMHandle, !projectm_get_preset_locked(_projectMHandle));
-            UpdateWindowTitle();
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::TogglePresetLocked));
             break;
 
         case SDLK_UP:
             // Increase beat sensitivity
-            projectm_set_beat_sensitivity(_projectMHandle, projectm_get_beat_sensitivity(_projectMHandle) + 0.01f);
+            _projectMWrapper.ChangeBeatSensitivity(0.01f);
             break;
 
         case SDLK_DOWN:
             // Decrease beat sensitivity
-            projectm_set_beat_sensitivity(_projectMHandle, projectm_get_beat_sensitivity(_projectMHandle) - 0.01f);
+            _projectMWrapper.ChangeBeatSensitivity(-0.01f);
             break;
     }
 }
@@ -259,7 +269,7 @@ void RenderLoop::ScrollEvent(const SDL_MouseWheelEvent& event)
 
 void RenderLoop::MouseDownEvent(const SDL_MouseButtonEvent& event)
 {
-    if (_presetSelectionGui.WantsMouseInput())
+    if (_projectMGui.WantsMouseInput())
     {
         return;
     }
@@ -310,28 +320,7 @@ void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
     }
 }
 
-void RenderLoop::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context)
+void RenderLoop::QuitNotificationHandler(const Poco::AutoPtr<QuitNotification>& notification)
 {
-    auto that = reinterpret_cast<RenderLoop*>(context);
-    auto presetName = projectm_playlist_item(that->_playlistHandle, index);
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Displaying preset: %s\n", presetName);;
-    projectm_playlist_free_string(presetName);
-
-    that->UpdateWindowTitle();
-}
-
-void RenderLoop::UpdateWindowTitle()
-{
-    auto presetName = projectm_playlist_item(_playlistHandle, projectm_playlist_get_position(_playlistHandle));
-
-    Poco::Path presetFile(presetName);
-    projectm_playlist_free_string(presetName);
-
-    std::string newTitle = "projectM ➫ " + presetFile.getBaseName();
-    if (projectm_get_preset_locked(_projectMHandle))
-    {
-        newTitle += " [locked]";
-    }
-
-    _sdlRenderingWindow.SetTitle(newTitle);
+    _wantsToQuit = true;
 }

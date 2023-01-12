@@ -1,6 +1,12 @@
 #include "AudioCapture.h"
 
+#include AUDIO_IMPL_HEADER
+
 #include "ProjectMWrapper.h"
+
+#include "notifications/DisplayToastNotification.h"
+
+#include <Poco/NotificationCenter.h>
 
 #include <Poco/Util/Application.h>
 
@@ -15,7 +21,10 @@ void AudioCapture::initialize(Poco::Util::Application& app)
 
     auto& projectMWrapper = app.getSubsystem<ProjectMWrapper>();
 
-    _impl = std::make_unique<AudioCaptureImpl>();
+    if (!_impl)
+    {
+        _impl = new AudioCaptureImpl;
+    }
 
     auto deviceList = _impl->AudioDeviceList();
     int audioDeviceIndex = GetInitialAudioDeviceIndex(deviceList);
@@ -27,8 +36,12 @@ void AudioCapture::initialize(Poco::Util::Application& app)
 
 void AudioCapture::uninitialize()
 {
-    _impl->StopRecording();
-    _impl.reset();
+    if (_impl)
+    {
+        _impl->StopRecording();
+        delete _impl;
+        _impl = nullptr;
+    }
 }
 
 void AudioCapture::NextAudioDevice()
@@ -36,7 +49,27 @@ void AudioCapture::NextAudioDevice()
     if (_impl)
     {
         _impl->NextAudioDevice();
+        Poco::NotificationCenter::defaultCenter().postNotification(new DisplayToastNotification(_impl->AudioDeviceName()));
     }
+}
+
+void AudioCapture::AudioDeviceIndex(int index)
+{
+    if (_impl)
+    {
+        _impl->AudioDeviceIndex(index);
+        Poco::NotificationCenter::defaultCenter().postNotification(new DisplayToastNotification(_impl->AudioDeviceName()));
+    }
+}
+
+int AudioCapture::AudioDeviceIndex() const
+{
+    if (_impl)
+    {
+        return _impl->AudioDeviceIndex();
+    }
+
+    return -1;
 }
 
 std::string AudioCapture::AudioDeviceName() const
@@ -49,6 +82,16 @@ std::string AudioCapture::AudioDeviceName() const
     return _impl->AudioDeviceName();
 }
 
+AudioCapture::AudioDeviceMap AudioCapture::AudioDeviceList()
+{
+    if (!_impl)
+    {
+        return {{-1, "(No audio devices available)"}};
+    }
+
+    return _impl->AudioDeviceList();
+}
+
 void AudioCapture::FillBuffer()
 {
     if (!_impl)
@@ -59,7 +102,7 @@ void AudioCapture::FillBuffer()
     _impl->FillBuffer();
 }
 
-void AudioCapture::PrintDeviceList(const std::map<int, std::string>& deviceList) const
+void AudioCapture::PrintDeviceList(const AudioDeviceMap& deviceList) const
 {
     if (_config->getBool("listDevices", false))
     {
@@ -71,7 +114,7 @@ void AudioCapture::PrintDeviceList(const std::map<int, std::string>& deviceList)
     }
 }
 
-int AudioCapture::GetInitialAudioDeviceIndex(const std::map<int, std::string>& deviceList)
+int AudioCapture::GetInitialAudioDeviceIndex(const AudioDeviceMap& deviceList)
 {
     int audioDeviceIndex{ -1 };
 

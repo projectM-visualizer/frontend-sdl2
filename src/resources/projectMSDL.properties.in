@@ -28,6 +28,9 @@ window.height = 768
 # This will limit max FPS to the vertical sync frequency but prevent tearing.
 window.waitForVerticalSync = true
 
+# If true, displays the current preset name (and locked state) in the window title.
+# If false, the window title is fixed to "projectM".
+window.displayPresetNameInTitle = true
 
 ### projectM settings
 
@@ -47,11 +50,14 @@ projectM.displayDuration = 30
 # If enabled, presets are selected randomly from the current playlist. Otherwise, they are played in order.
 projectM.shuffleEnabled = true
 
+# If enabled, the current/initial preset can only be changed manually.
+projectM.presetLocked = false
+
 # Target FPS, usually 60.
 projectM.fps = 60
 
 # Per-pixel mesh size. This is the grid in which "per-pixel" code is executed, once per cell.
-# Do net set this value too high, as it severely impacts performance. On low-end hardware, set this to a smal
+# Do not set this value too high, as it severely impacts performance. On low-end hardware, set this to a small
 # value, e.g. 64x32. This does *NOT* affect the actual render/shader resolution!
 projectM.meshX = 200
 projectM.meshY = 125

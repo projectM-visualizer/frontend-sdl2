@@ -1,3 +1,4 @@
+add_subdirectory(notifications)
 add_subdirectory(gui)
 
 set(PROJECTM_CONFIGURATION_FILE "${CMAKE_CURRENT_BINARY_DIR}/projectMSDL.properties")
@@ -50,6 +51,7 @@ target_compile_definitions(projectMSDL
 target_link_libraries(projectMSDL
         PRIVATE
         ProjectMSDL-GUI
+        ProjectMSDL-Notifications
         libprojectM::playlist
         Poco::Util
         SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>

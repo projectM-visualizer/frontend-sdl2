@@ -77,6 +77,25 @@ void AudioCaptureImpl::NextAudioDevice()
     StartRecording(_projectMHandle, nextAudioDeviceId);
 }
 
+void AudioCaptureImpl::AudioDeviceIndex(int index)
+{
+    IMMDeviceEnumerator* enumerator{GetDeviceEnumerator()};
+    auto captureDevices{GetAudioDeviceList(enumerator)};
+    enumerator->Release();
+
+    if (index >= -1 && index < static_cast<int>(captureDevices.size()))
+    {
+        _currentAudioDeviceIndex = index;
+        StopRecording();
+        StartRecording(_projectMHandle, index);
+    }
+}
+
+int AudioCaptureImpl::AudioDeviceIndex() const
+{
+    return _currentAudioDeviceIndex;
+}
+
 std::string AudioCaptureImpl::AudioDeviceName() const
 {
     if (_currentAudioDeviceIndex < 0)
@@ -195,9 +214,9 @@ bool AudioCaptureImpl::OpenAudioDevice(IMMDevice* device, bool useLoopback)
 {
     // activate an IAudioClient
     HRESULT result = device->Activate(__uuidof(IAudioClient),
-                              CLSCTX_ALL,
-                              nullptr,
-                              reinterpret_cast<void**>(&_audioClient));
+                                      CLSCTX_ALL,
+                                      nullptr,
+                                      reinterpret_cast<void**>(&_audioClient));
     if (FAILED(result))
     {
         poco_error_f1(_logger, "IMMDevice::Activate(IAudioClient) failed: result = 0x%08?x", result);

@@ -8,7 +8,7 @@
 #include "ProjectMWrapper.h"
 #include "RenderLoop.h"
 #include "SDLRenderingWindow.h"
-#include "gui/PresetSelection.h"
+#include "gui/ProjectMGUI.h"
 
 #include <Poco/Environment.h>
 #include <Poco/File.h>
@@ -24,7 +24,7 @@ ProjectMSDLApplication::ProjectMSDLApplication()
     addSubsystem(new SDLRenderingWindow);
     addSubsystem(new ProjectMWrapper);
     addSubsystem(new AudioCapture);
-    addSubsystem(new PresetSelection);
+    addSubsystem(new ProjectMGUI);
 }
 
 const char* ProjectMSDLApplication::name() const
@@ -34,18 +34,70 @@ const char* ProjectMSDLApplication::name() const
 
 void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
 {
-    config().add(_commandLineOverrides, PRIO_APPLICATION);
+    // Application settings are PRIO_APPLICATION, higher values have lower precedence.
+    // So we put command-line overrides just below settings changed in the UI.
+    config().add(_commandLineOverrides, PRIO_APPLICATION + 10);
+    getSubsystem<ProjectMGUI>().CommandLineConfiguration(_commandLineOverrides);
 
-    loadConfiguration(PRIO_DEFAULT);
+    std::string configFileName = config().getString("application.baseName") + ".properties";
+    Poco::Path userConfigurationDir = Poco::Path::configHome();
+    userConfigurationDir.makeDirectory().append("projectM/");
 
-    // Try to load user's custom configuration file on top.
-    Poco::Path userConfigurationFile =
-        Poco::Path::configHome() + "projectM" + Poco::Path::separator() + "projectMSDL.properties";
-    if (Poco::File(userConfigurationFile).exists())
+    try
     {
-        loadConfiguration(userConfigurationFile.toString(), PRIO_DEFAULT - 10);
+        if (loadConfiguration(PRIO_DEFAULT) == 0)
+        {
+#ifdef POCO_OS_FAMILY_UNIX
+            // In macOS bundles, the file may be located in the ../Resources dir, relative to the exe location.
+            Poco::Path configPath = config().getString("application.dir");
+            configPath.makeDirectory().makeParent().append("Resources/").setFileName(configFileName);
+            if (Poco::File(configPath).exists())
+            {
+                loadConfiguration(configPath.toString(), PRIO_DEFAULT);
+            }
+            else
+            {
+                // On Linux, system-installed packages often put default configs in /usr/share
+                configPath.assign("/usr/share/projectM/").setFileName(configFileName);
+                if (Poco::File(configPath).exists())
+                {
+                    loadConfiguration(configPath.toString(), PRIO_DEFAULT);
+                }
+            }
+#endif
+        }
+    }
+    catch (Poco::Exception& ex)
+    {
+        poco_error_f1(logger(), "Failed to load default configuration file: %s", ex.displayText());
     }
 
+    try
+    {
+        // Try to load user's custom configuration file.
+        Poco::Path userConfigurationFile = userConfigurationDir;
+        userConfigurationFile.setFileName(configFileName);
+        if (Poco::File(userConfigurationFile).exists())
+        {
+            loadConfiguration(userConfigurationFile.toString(), PRIO_DEFAULT - 10);
+        }
+
+        // Lastly, load user's UI configuration file into a separate instance.
+        // This is used to save any config changes made via the UI, so it can be reset independently.
+        userConfigurationFile.setFileName(config().getString("application.baseName") + "_UI.properties");
+        if (!Poco::File(userConfigurationFile).exists())
+        {
+            Poco::File(userConfigurationDir).createDirectories();
+            Poco::File(userConfigurationFile).createFile();
+        }
+        Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> uiConfiguration = new Poco::Util::PropertyFileConfiguration(userConfigurationFile.toString());
+        config().add(uiConfiguration, PRIO_DEFAULT - 20);
+        getSubsystem<ProjectMGUI>().UIConfiguration(uiConfiguration);
+    }
+    catch (Poco::Exception& ex)
+    {
+        poco_error_f1(logger(), "Failed to load/create user configuration file: %s", ex.displayText());
+    }
 
     Application::initialize(self);
 }
@@ -158,10 +210,9 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<number>", true)
                           .binding("projectM.hardCutSensitivity", _commandLineOverrides));
 
-    options.addOption(Option("beatSensitivity", "", "Beat sensitivity. Between 0.0 and 5.0. Default 1.0.",
+    options.addOption(Option("beatSensitivity", "", "Beat sensitivity. Between 0.0 and 2.0. Default 1.0.",
                              false, "<number>", true)
                           .binding("projectM.beatSensitivity", _commandLineOverrides));
-
 }
 
 int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)

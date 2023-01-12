@@ -3,9 +3,14 @@
 #include "AudioCapture.h"
 #include "ProjectMWrapper.h"
 #include "SDLRenderingWindow.h"
-#include "gui/PresetSelection.h"
+
+#include "notifications/QuitNotification.h"
 
 #include <Poco/Logger.h>
+#include <Poco/NObserver.h>
+#include <Poco/Notification.h>
+
+class ProjectMGUI;
 
 class RenderLoop
 {
@@ -39,12 +44,6 @@ protected:
     void KeyEvent(const SDL_KeyboardEvent& event, bool down);
 
     /**
-     * @brief Handles SDL key press events when inside preset search mode.
-     * @param event The key event.
-     */
-    void SearchKeyEvent(const SDL_KeyboardEvent& event);
-
-    /**
      * @brief Handles SDL mouse wheel events.
      * @param event The mouse wheel event
      */
@@ -63,25 +62,21 @@ protected:
     void MouseUpEvent(const SDL_MouseButtonEvent& event);
 
     /**
-     * @brief projectM callback. Called whenever a preset is switched.
-     * @param isHardCut True if the switch was a hard cut.
-     * @param index New preset playlist index.
-     * @param context Callback context, e.g. "this" pointer.
+     * @brief Handler for quit notifications.
+     * @param notification The received notification.
      */
-    static void PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context);
-
-    /**
-     * Sets the window title to the current preset name.
-     */
-    void UpdateWindowTitle();
+    void QuitNotificationHandler(const Poco::AutoPtr<QuitNotification>& notification);
 
     AudioCapture& _audioCapture;
     ProjectMWrapper& _projectMWrapper;
     SDLRenderingWindow& _sdlRenderingWindow;
-    PresetSelection& _presetSelectionGui;
 
     projectm_handle _projectMHandle{nullptr};
     projectm_playlist_handle _playlistHandle{nullptr};
+
+    ProjectMGUI& _projectMGui;
+
+    Poco::NObserver<RenderLoop, QuitNotification> _quitNotificationObserver{*this, &RenderLoop::QuitNotificationHandler}; //!< The observer for quit notifications.
 
     bool _wantsToQuit{false};
 

@@ -62,6 +62,18 @@ public:
     void NextAudioDevice();
 
     /**
+     * @brief Activates the audio device with the given idnex for recording.
+     * @param index The index, as listed by @a AudioDeviceList()
+     */
+    void AudioDeviceIndex(int index);
+
+    /**
+     * @brief Returns the currently used Audio device index.
+     * @return The index of the current audio device, as listed by @a AudioDeviceList()
+     */
+    int AudioDeviceIndex() const;
+
+    /**
      * @brief Retrieves the current audio device name.
      * @return The name of the currently selected audio recording device.
      */

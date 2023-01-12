@@ -7,12 +7,23 @@
 /**
  * @brief File/preset chooser dialog
  *
- * Displays a file browser that shows directories and .milk files from which the user can choose one.
+ * Displays a file browser that shows directories and files from which the user can choose.
  */
 class FileChooser
 {
 public:
 
+    FileChooser() = delete;
+
+    /**
+     * @brief Constructor.
+     * @param title The window title.
+     */
+    explicit FileChooser(std::string title, std::vector<std::string> extensions);
+
+    /**
+     * @brief Displays the file chooser window.
+     */
     void Show();
 
     /**
@@ -20,7 +31,6 @@ public:
      * @return True if the user chose a file, false if not.
      */
     bool Draw();
-
 
     /**
      * @brief Returns the selected file
@@ -49,6 +59,8 @@ protected:
      */
     void ChangeDirectory(const Poco::Path& newDirectory);
 
+    std::string _title; //!< The window title.
+    std::vector<std::string> _extensions; //!< File extensions to filter.
     bool _visible{ false }; //!< File chooser window visible.
     bool _showhidden{ false }; //!< If true, hidden files/dirs are shown.
     Poco::Path _currentDir{ Poco::Path::current() }; //!< Current working dir.

@@ -1,8 +1,11 @@
 #pragma once
 
+#include "notifications/UpdateWindowTitleNotification.h"
+
 #include <SDL2/SDL.h>
 
 #include <Poco/Logger.h>
+#include <Poco/NObserver.h>
 
 #include <Poco/Util/Subsystem.h>
 #include <Poco/Util/AbstractConfiguration.h>
@@ -28,12 +31,6 @@ public:
      * @param height[out] A reference to a variable that will receive the canvas height.
      */
     void GetDrawableSize(int& width, int& height) const;
-
-    /**
-     * @brief Sets the window title.
-     * @param title The new window title.
-     */
-    void SetTitle(const std::string& title) const;
 
     /**
      * Swaps the OpenGL front- and back buffers.
@@ -89,10 +86,18 @@ protected:
      */
     void DumpOpenGLInfo();
 
+    /**
+     * @brief Updates the window title.
+     * @param notification The update notification.
+     */
+    void UpdateWindowTitleNotificationHandler(const Poco::AutoPtr<UpdateWindowTitleNotification>& notification);
+
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "window" configuration subkey.
 
     SDL_Window* _renderingWindow{ nullptr }; //!< Pointer to the SDL window used for rendering.
     SDL_GLContext _glContext{ nullptr }; //!< Pointer to the OpenGL context associated with the window.
+
+    Poco::NObserver<SDLRenderingWindow, UpdateWindowTitleNotification> _updateWindowTitleObserver{*this, &SDLRenderingWindow::UpdateWindowTitleNotificationHandler}; //!< the observer for title update notifications
 
     Poco::Logger& _logger{ Poco::Logger::get("SDLRenderingWindow") }; //!< The class logger.
 

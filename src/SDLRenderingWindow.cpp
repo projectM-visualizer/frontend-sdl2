@@ -1,5 +1,9 @@
 #include "SDLRenderingWindow.h"
 
+#include "ProjectMWrapper.h"
+
+#include <Poco/NotificationCenter.h>
+
 #include <Poco/Util/Application.h>
 
 #include <SDL2/SDL_opengl.h>
@@ -17,10 +21,14 @@ void SDLRenderingWindow::initialize(Poco::Util::Application& app)
     {
         CreateSDLWindow();
     }
+
+    Poco::NotificationCenter::defaultCenter().addObserver(_updateWindowTitleObserver);
 }
 
 void SDLRenderingWindow::uninitialize()
 {
+    Poco::NotificationCenter::defaultCenter().removeObserver(_updateWindowTitleObserver);
+
     if (_renderingWindow)
     {
         DestroySDLWindow();
@@ -30,11 +38,6 @@ void SDLRenderingWindow::uninitialize()
 void SDLRenderingWindow::GetDrawableSize(int& width, int& height) const
 {
     SDL_GL_GetDrawableSize(_renderingWindow, &width, &height);
-}
-
-void SDLRenderingWindow::SetTitle(const std::string& title) const
-{
-    SDL_SetWindowTitle(_renderingWindow, title.c_str());
 }
 
 void SDLRenderingWindow::Swap() const
@@ -297,4 +300,29 @@ SDL_Window* SDLRenderingWindow::GetRenderingWindow() const
 SDL_GLContext SDLRenderingWindow::GetGlContext() const
 {
     return _glContext;
+}
+
+void SDLRenderingWindow::UpdateWindowTitleNotificationHandler(POCO_UNUSED const Poco::AutoPtr<UpdateWindowTitleNotification>& notification)
+{
+    std::string newTitle = "projectM";
+
+    if (_config->getBool("displayPresetNameInTitle", true))
+    {
+        auto& app = Poco::Util::Application::instance();
+        auto& projectMWrapper = app.getSubsystem<ProjectMWrapper>();
+
+        auto presetName = projectm_playlist_item(projectMWrapper.Playlist(), projectm_playlist_get_position(projectMWrapper.Playlist()));
+
+        Poco::Path presetFile(presetName);
+        projectm_free_string(presetName);
+
+        newTitle += " ➫ " + presetFile.getBaseName();
+
+        if (projectm_get_preset_locked(projectMWrapper.ProjectM()))
+        {
+            newTitle += " [locked]";
+        }
+    }
+
+    SDL_SetWindowTitle(_renderingWindow, newTitle.c_str());
 }

@@ -1,9 +1,12 @@
 #pragma once
 
+#include "notifications/PlaybackControlNotification.h"
+
 #include <projectM-4/projectM.h>
 #include <projectM-4/playlist.h>
 
 #include <Poco/Logger.h>
+#include <Poco/NObserver.h>
 
 #include <Poco/Util/AbstractConfiguration.h>
 #include <Poco/Util/Subsystem.h>
@@ -14,6 +17,10 @@ class ProjectMWrapper : public Poco::Util::Subsystem
 {
 public:
     const char* name() const override;
+
+    void initialize(Poco::Util::Application& app) override;
+
+    void uninitialize() override;
 
     /**
      * Returns the projectM instance handle.
@@ -40,16 +47,29 @@ public:
      */
     void DisplayInitialPreset();
 
-    void initialize(Poco::Util::Application& app) override;
+    /**
+     * @brief Changes beat sensitivity by the given value.
+     * @param value A positive or negative delta value.
+     */
+    void ChangeBeatSensitivity(float value);
 
-    void uninitialize() override;
+private:
+    /**
+     * @brief projectM callback. Called whenever a preset is switched.
+     * @param isHardCut True if the switch was a hard cut.
+     * @param index New preset playlist index.
+     * @param context Callback context, e.g. "this" pointer.
+     */
+    static void PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context);
 
+    void PlaybackControlNotificationHandler(const Poco::AutoPtr<PlaybackControlNotification>& notification);
 
-protected:
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
 
     projectm_handle _projectM{nullptr}; //!< Pointer to the projectM instance used by the application.
     projectm_playlist_handle _playlist{nullptr}; //!< Pointer to the projectM playlist manager instance.
+
+    Poco::NObserver<ProjectMWrapper, PlaybackControlNotification> _playbackControlNotificationObserver{*this, &ProjectMWrapper::PlaybackControlNotificationHandler};
 
     Poco::Logger& _logger{Poco::Logger::get("SDLRenderingWindow")}; //!< The class logger.
 };

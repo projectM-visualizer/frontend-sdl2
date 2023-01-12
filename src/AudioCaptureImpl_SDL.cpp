@@ -85,6 +85,20 @@ void AudioCaptureImpl::NextAudioDevice()
     StartRecording(_projectMHandle, nextAudioDeviceId);
 }
 
+void AudioCaptureImpl::AudioDeviceIndex(int index)
+{
+    if (index >= -1 && index < SDL_GetNumAudioDevices(true))
+    {
+        _currentAudioDeviceIndex = index;
+        StartRecording(_projectMHandle, index);
+    }
+}
+
+int AudioCaptureImpl::AudioDeviceIndex() const
+{
+    return _currentAudioDeviceIndex;
+}
+
 std::string AudioCaptureImpl::AudioDeviceName() const
 {
     if (_currentAudioDeviceIndex >= 0)
