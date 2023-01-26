@@ -55,6 +55,7 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         if (!presetPath.empty())
         {
             projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
+            projectm_playlist_sort(_playlist, 0, projectm_playlist_size(_playlist), SORT_PREDICATE_FILENAME_ONLY, SORT_ORDER_ASCENDING);
         }
     }
 }
