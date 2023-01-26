@@ -28,8 +28,8 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
 
         sdlWindow.GetDrawableSize(canvasWidth, canvasHeight);
 
-        auto presetPath = _config->getString("presetPath", app.config().getString("application.dir", ""));
-        auto texturePath = _config->getString("texturePath", app.config().getString("", ""));
+        auto presetPaths = GetPathListWithDefault("presetPath", app.config().getString("application.dir", ""));
+        auto texturePaths = GetPathListWithDefault("texturePath", app.config().getString("", ""));
 
         _projectM = projectm_create();
         if (_projectM == nullptr)
@@ -52,10 +52,16 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         projectm_set_hard_cut_sensitivity(_projectM, static_cast<float>(_config->getDouble("hardCutSensitivity", 1.0)));
         projectm_set_beat_sensitivity(_projectM, static_cast<float>(_config->getDouble("beatSensitivity", 1.0)));
 
-        if (!texturePath.empty())
+        if (!texturePaths.empty())
         {
-            const char* texturePathList[1]{&texturePath[0]};
-            projectm_set_texture_search_paths(_projectM, texturePathList, 1);
+            std::vector<const char*> texturePathList;
+            texturePathList.reserve(texturePaths.size());
+            for (const auto& texturePath : texturePaths)
+            {
+                texturePathList.push_back(texturePath.data());
+            }
+
+            projectm_set_texture_search_paths(_projectM, texturePathList.data(), texturePaths.size());
         }
 
         // Playlist
@@ -67,11 +73,12 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         }
 
         projectm_playlist_set_shuffle(_playlist, _config->getBool("shuffleEnabled", true));
-        if (!presetPath.empty())
+
+        for (const auto& presetPath : presetPaths)
         {
             projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
-            projectm_playlist_sort(_playlist, 0, projectm_playlist_size(_playlist), SORT_PREDICATE_FILENAME_ONLY, SORT_ORDER_ASCENDING);
         }
+        projectm_playlist_sort(_playlist, 0, projectm_playlist_size(_playlist), SORT_PREDICATE_FILENAME_ONLY, SORT_ORDER_ASCENDING);
 
         projectm_playlist_set_preset_switched_event_callback(_playlist, &ProjectMWrapper::PresetSwitchedEvent, static_cast<void*>(this));
     }
@@ -189,4 +196,23 @@ void ProjectMWrapper::PlaybackControlNotificationHandler(const Poco::AutoPtr<Pla
             break;
         }
     }
+}
+
+std::vector<std::string> ProjectMWrapper::GetPathListWithDefault(const std::string& baseKey, const std::string& defaultPath)
+{
+    using Poco::Util::AbstractConfiguration;
+
+    std::vector<std::string> pathList;
+    auto defaultPresetPath = _config->getString(baseKey, defaultPath);
+    if (!defaultPresetPath.empty())
+    {
+        pathList.push_back(defaultPresetPath);
+    }
+    AbstractConfiguration::Keys subKeys;
+    _config->keys(baseKey, subKeys);
+    for (const auto& key : subKeys)
+    {
+        pathList.push_back(_config->getString(baseKey + "." + key, ""));
+    }
+    return pathList;
 }

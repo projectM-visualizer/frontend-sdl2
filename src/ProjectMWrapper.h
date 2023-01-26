@@ -64,6 +64,8 @@ private:
 
     void PlaybackControlNotificationHandler(const Poco::AutoPtr<PlaybackControlNotification>& notification);
 
+    std::vector<std::string> GetPathListWithDefault(const std::string& baseKey, const std::string& defaultPath);
+
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
 
     projectm_handle _projectM{nullptr}; //!< Pointer to the projectM instance used by the application.

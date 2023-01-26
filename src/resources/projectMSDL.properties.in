@@ -34,12 +34,17 @@ window.displayPresetNameInTitle = true
 
 ### projectM settings
 
-# Path where projectMSDL will search for presets and textures. The directory will be searched recursively.
+# Default path where projectMSDL will search for presets and textures. The directory will be searched recursively.
+# To add additional preset paths, add them as shown in the examples below.
 projectM.presetPath = @DEFAULT_PRESETS_PATH@
+#projectM.presetPath.1 = /another/preset/path
+#projectM.presetPath.2 = /yet/another/preset/path
 
-# Optional path where projectMSDL will search for additional textures. The directory will be searched recursively.
-# Note that textures found under "presetPath" will override textures in the texturePath dir.
+# Default path where projectMSDL will search for additional textures. The directory will be searched recursively.
+# To add additional texture paths, add them as shown in the examples below.
 projectM.texturePath = @DEFAULT_TEXTURES_PATH@
+#projectM.texturePath.1 = /another/texture/path
+#projectM.texturePath.2 = /yet/another/texture/path
 
 # If true, displays the built-in projectM logo preset on startup.
 projectM.enableSplash = false
