@@ -146,7 +146,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
 #ifdef _DEBUG
         case SDLK_d:
             // Write next rendered frame to file
-            projectm_write_debug_image_on_next_frame(_projectMHandle);
+            projectm_write_debug_image_on_next_frame(_projectMHandle, nullptr);
             break;
 #endif
 
