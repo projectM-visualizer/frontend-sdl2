@@ -164,6 +164,10 @@ void ProjectMSDLApplication::DisplayHelp(POCO_UNUSED const std::string& name, PO
     SDL_VERSION(&sdlBuild);
     SDL_GetVersion(&sdlLoaded);
 
+    auto* projectMVersion = projectm_get_version_string();
+    std::string projectMRuntimeVersion(projectMVersion);
+    projectm_free_string(projectMVersion);
+
     formatter.setUsage(config().getString("application.name") + " [options]");
     formatter.setHeader(Poco::format(R"(
 projectM SDL Standalone Visualizer
@@ -171,10 +175,11 @@ projectM SDL Standalone Visualizer
 Licensed under the GNU General Public License 3.0
 
 Application version: %s
-Built against libprojectM version: %s
+Built/running with libprojectM version: %s / %s
 Built against SDL version: %?d.%?d.%?d (running with %?d.%?d.%?d))",
                                      std::string(PROJECTMSDL_VERSION),
-                                     std::string(LIBPROJECTM_BUILD_VERSION),
+                                     std::string(PROJECTM_VERSION_STRING),
+                                     projectMRuntimeVersion,
                                      sdlBuild.major, sdlBuild.minor, sdlBuild.patch,
                                      sdlLoaded.major, sdlLoaded.minor, sdlLoaded.patch));
 

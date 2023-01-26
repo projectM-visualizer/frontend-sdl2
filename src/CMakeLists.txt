@@ -44,7 +44,6 @@ endif()
 target_compile_definitions(projectMSDL
         PRIVATE
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
-        LIBPROJECTM_BUILD_VERSION="${libprojectM_VERSION}"
         )
 
 target_link_libraries(projectMSDL
