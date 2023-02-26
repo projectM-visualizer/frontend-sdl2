@@ -32,6 +32,19 @@ make
 
 If all runs successfully, you should have an executable.
 
+#### Linux
+[Note: 'make install' is broken at the moment. Just copy the binary 'projectMSDL' to your choice of run-path. E.g.]
+```shell
+cp src/projectMSDL ~/bin
+```
+Create a configuration file or projectMSDL will complain, a lot.
+```shell
+mkdir ~/.config/projectM
+cp src/projectMSDL.properties ~/.config/projectM
+```
+The default audio device (-1) may or may not be your actual default audio output. `projectMSDL -l` will list audio devices; hopefully, one of them looks familiar - like "Monitor of ... digital stereo" or "Monitor of USB Audio Device ..." (if you have one of those).
+
+
 ### Run
 
 You should have a directory of visual presets you wish to use. You can fetch a giant trove of curated presets [here](https://github.com/projectM-visualizer/presets-cream-of-the-crop).
