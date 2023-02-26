@@ -1,6 +1,6 @@
 #include "AudioCaptureImpl_WASAPI.h"
 
-#include <libprojectM/projectM.h>
+#include <projectM-4/projectM.h>
 
 #include <Poco/UnicodeConverter.h>
 

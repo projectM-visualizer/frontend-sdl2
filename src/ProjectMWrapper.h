@@ -1,7 +1,7 @@
 #pragma once
 
-#include <libprojectM/projectM.h>
-#include <libprojectM/playlist.h>
+#include <projectM-4/projectM.h>
+#include <projectM-4/playlist.h>
 
 #include <Poco/Logger.h>
 
