@@ -175,7 +175,7 @@ projectM SDL Standalone Visualizer
 Licensed under the GNU General Public License 3.0
 
 Application version: %s
-Built/running with libprojectM version: %s / %s
+Built/running with projectM4 version: %s / %s
 Built against SDL version: %?d.%?d.%?d (running with %?d.%?d.%?d))",
                                      std::string(PROJECTMSDL_VERSION),
                                      std::string(PROJECTM_VERSION_STRING),

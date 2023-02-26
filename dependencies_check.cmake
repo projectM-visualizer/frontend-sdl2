@@ -1,5 +1,5 @@
-if(libprojectM_VERSION VERSION_LESS 3.1.13)
-    message(FATAL_ERROR "libprojectM version 3.13 or higher is required. Version found: ${libprojectM_VERSION}.")
+if(projectM4_VERSION VERSION_LESS 3.1.13)
+    message(FATAL_ERROR "libprojectM version 3.13 or higher is required. Version found: ${projectM4_VERSION}.")
 endif()
 
 if(SDL2_VERSION VERSION_LESS 2.0.5)

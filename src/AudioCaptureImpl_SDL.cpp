@@ -2,7 +2,7 @@
 
 #include <Poco/Util/Application.h>
 
-#include <libprojectM/projectM.h>
+#include <projectM-4/projectM.h>
 
 AudioCaptureImpl::AudioCaptureImpl()
     : _requestedSampleCount(projectm_pcm_get_max_samples())

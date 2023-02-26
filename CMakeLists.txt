@@ -24,7 +24,7 @@ if(NOT SDL2_LINKAGE STREQUAL "shared" AND NOT SDL2_LINKAGE STREQUAL "static")
             )
 endif()
 
-find_package(libprojectM REQUIRED COMPONENTS Playlist)
+find_package(projectM4 REQUIRED COMPONENTS Playlist)
 find_package(SDL2 REQUIRED)
 find_package(Poco REQUIRED COMPONENTS Util)
 
@@ -42,4 +42,4 @@ include(packaging.cmake)
 
 message(STATUS "SDL version: ${SDL2_VERSION}")
 message(STATUS "Poco version: ${Poco_VERSION}")
-message(STATUS "projectM version: ${libprojectM_VERSION}")
+message(STATUS "projectM version: ${projectM4_VERSION}")
