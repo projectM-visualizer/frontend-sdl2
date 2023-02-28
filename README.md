@@ -33,7 +33,7 @@ make
 If all runs successfully, you should have an executable.
 
 #### Linux
-[Note: 'make install' is broken at the moment. Just copy the binary 'projectMSDL' to your choice of run-path. E.g.]
+[Note: 'make install' is unimplemented at the moment. Just copy the binary 'projectMSDL' to your choice of run-path. E.g.]
 ```shell
 cp src/projectMSDL ~/bin
 ```
