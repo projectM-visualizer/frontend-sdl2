@@ -6,18 +6,64 @@ set(CMAKE_POSITION_INDEPENDENT_CODE YES)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-project(projectM-SDL
+project(projectMSDL
         LANGUAGES C CXX
         VERSION 2.0.0
         )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+# Default install layouts.
+option(ENABLE_FLAT_PACKAGE "Creates a \"flat\" install layout with files and preset/texture dirs directly in the main dir." OFF)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ENABLE_FLAT_PACKAGE)
+    include(GNUInstallDirs)
+
+    set(PROJECTMSDL_BIN_DIR "${CMAKE_INSTALL_BINDIR}" CACHE STRING "Directory to install executables in, relative to the install prefix.")
+    set(PROJECTMSDL_LIB_DIR "${CMAKE_INSTALL_LIBDIR}" CACHE STRING "Directory to install additional libraries in, relative to the install prefix.")
+    set(PROJECTMSDL_DATA_DIR "${CMAKE_INSTALL_DATAROOTDIR}/${CMAKE_PROJECT_NAME}" CACHE STRING "Directory to install the config file, presets and texture, relative to the install prefix.")
+    set(PROJECTMSDL_PRESETS_DIR "${PROJECTMSDL_DATA_DIR}/presets" CACHE STRING "Directory to install optional preset files, relative to the install prefix.")
+    set(PROJECTMSDL_TEXTURES_DIR "${PROJECTMSDL_DATA_DIR}/textures" CACHE STRING "Directory to install optional texture files, relative to the install prefix.")
+
+    # Additional options for desktop integration
+    option(ENABLE_DESKTOP_ICON "Install a .desktop file and icons" ON)
+    set(PROJECTMSDL_DESKTOP_DIR "${CMAKE_INSTALL_DATAROOTDIR}/applications" CACHE STRING "Directory to install the .desktop file in, relative to the install prefix.")
+    set(PROJECTMSDL_ICONS_DIR "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor" CACHE STRING "Directory to install the icons in, relative to the install prefix.")
+
+    GNUInstallDirs_get_absolute_install_dir(_config_dir_abs_init PROJECTMSDL_CONFIG_DIR DATAROOTDIR)
+    set(DEFAULT_CONFIG_PATH "${_config_dir_abs_init}" CACHE STRING "Optional path to look for the configuration file in addition to PROJECTMSDL_BIN_DIR.")
+    set(DEFAULT_PRESETS_PATH "${_config_dir_abs_init}/presets" CACHE STRING "Default presets path in the configuration file.")
+    set(DEFAULT_TEXTURES_PATH "${_config_dir_abs_init}/textures" CACHE STRING "Default textures path in the configuration file.")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT ENABLE_FLAT_PACKAGE)
+    # Package as .app bundle on macOS
+    set(BUNDLE_BASE_DIR "projectM.app/Contents")
+    set(PROJECTMSDL_BIN_DIR "${BUNDLE_BASE_DIR}/MacOS" CACHE STRING "Directory to install executables in, relative to the install prefix.")
+    set(PROJECTMSDL_LIB_DIR "${BUNDLE_BASE_DIR}/PlugIns" CACHE STRING "Directory to install additional libraries in, relative to the install prefix.")
+    set(PROJECTMSDL_DATA_DIR "{BUNDLE_BASE_DIR}/Resources" CACHE STRING "Directory to install the config file, presets and texture, relative to the install prefix.")
+    set(PROJECTMSDL_PRESETS_DIR "${PROJECTMSDL_DATA_DIR}/Presets" CACHE STRING "Directory to install optional preset files, relative to the install prefix.")
+    set(PROJECTMSDL_TEXTURES_DIR "${PROJECTMSDL_DATA_DIR}/Textures" CACHE STRING "Directory to install optional texture files, relative to the install prefix.")
+
+    set(DEFAULT_CONFIG_PATH "\${application.dir}/../Resources" CACHE STRING "Optional path to look for the configuration file in addition to PROJECTMSDL_BIN_DIR.")
+    set(DEFAULT_PRESETS_PATH "\${application.dir}/../Resources/Presets" CACHE STRING "Default presets path in the configuration file.")
+    set(DEFAULT_TEXTURES_PATH "\${application.dir}/../Resources/Presets" CACHE STRING "Default textures path in the configuration file.")
+else()
+    # Windows and others: use flat layout.
+    set(PROJECTMSDL_BIN_DIR "." CACHE STRING "Directory to install executables in, relative to the install prefix.")
+    set(PROJECTMSDL_LIB_DIR "." CACHE STRING "Directory to install additional libraries in, relative to the install prefix.")
+    set(PROJECTMSDL_DATA_DIR "." CACHE STRING "Directory to install the config file, presets and texture, relative to the install prefix.")
+    set(PROJECTMSDL_PRESETS_DIR "${PROJECTMSDL_DATA_DIR}/presets" CACHE STRING "Directory to install optional preset files, relative to the install prefix.")
+    set(PROJECTMSDL_TEXTURES_DIR "${PROJECTMSDL_DATA_DIR}/textures" CACHE STRING "Directory to install optional texture files, relative to the install prefix.")
+
+    set(DEFAULT_CONFIG_PATH "" CACHE STRING "Optional path to look for the configuration file in addition to PROJECTMSDL_BIN_DIR.")
+    set(DEFAULT_PRESETS_PATH "\${application.dir}/presets" CACHE STRING "Default presets path in the configuration file.")
+    set(DEFAULT_TEXTURES_PATH "\${application.dir}/textures" CACHE STRING "Default textures path in the configuration file.")
+endif()
+
 set(SDL2_LINKAGE "shared" CACHE STRING "Set to either shared or static to specify how libSDL2 should be linked. Defaults to shared.")
 option(ENABLE_FREETYPE "Use the Freetype font rendering library instead of the built-in stb_truetype if available" ON)
 
-set(DEFAULT_PRESETS_PATH "\${application.dir}/presets" CACHE STRING "Default presets path in the configuration file.")
-set(DEFAULT_TEXTURES_PATH "\${application.dir}/textures" CACHE STRING "Default textures path in the configuration file.")
+
+set(PRESET_DIRS "" CACHE STRING "List of paths with presets. Will be installed in \"presets\" ")
+set(TEXTURE_DIRS "" CACHE STRING "List of paths with presets.")
 
 if(NOT SDL2_LINKAGE STREQUAL "shared" AND NOT SDL2_LINKAGE STREQUAL "static")
     message(FATAL_ERROR "Invalid libSDL2 linkage provided in SDL2_LINKAGE: \"${SDL2_LINKAGE}\".\n"

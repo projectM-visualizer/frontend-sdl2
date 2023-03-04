@@ -313,10 +313,13 @@ void SDLRenderingWindow::UpdateWindowTitleNotificationHandler(POCO_UNUSED const 
 
         auto presetName = projectm_playlist_item(projectMWrapper.Playlist(), projectm_playlist_get_position(projectMWrapper.Playlist()));
 
-        Poco::Path presetFile(presetName);
-        projectm_free_string(presetName);
+        if (presetName)
+        {
+            Poco::Path presetFile(presetName);
+            projectm_playlist_free_string(presetName);
 
-        newTitle += " ➫ " + presetFile.getBaseName();
+            newTitle += " ➫ " + presetFile.getBaseName();
+        }
 
         if (projectm_get_preset_locked(projectMWrapper.ProjectM()))
         {

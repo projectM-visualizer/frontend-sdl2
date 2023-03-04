@@ -45,26 +45,24 @@ void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
 
     try
     {
-        if (loadConfiguration(PRIO_DEFAULT) == 0)
+        //if (loadConfiguration(PRIO_DEFAULT) == 0)
         {
-#ifdef POCO_OS_FAMILY_UNIX
-            // In macOS bundles, the file may be located in the ../Resources dir, relative to the exe location.
-            Poco::Path configPath = config().getString("application.dir");
-            configPath.makeDirectory().makeParent().append("Resources/").setFileName(configFileName);
-            if (Poco::File(configPath).exists())
+            // The file may be located in the ../Resources bundle dir on macOS, elsewhere relative
+            // to the executable or within an absolute path.
+            // By setting and retrieving the compiled-in default, we can make use of POCO's variable replacement.
+            // This allows using ${application.dir} etc. in the path.
+            config().setString("application.defaultConfigurationFile", PROJECTMSDL_CONFIG_LOCATION);
+            std::string configPath = config().getString("application.defaultConfigurationFile", "");
+            if (!configPath.empty())
             {
-                loadConfiguration(configPath.toString(), PRIO_DEFAULT);
-            }
-            else
-            {
-                // On Linux, system-installed packages often put default configs in /usr/share
-                configPath.assign("/usr/share/projectM/").setFileName(configFileName);
-                if (Poco::File(configPath).exists())
+                Poco::Path configFilePath(configPath);
+                configFilePath.makeDirectory().setFileName(configFileName);
+                if (Poco::File(configFilePath).exists())
                 {
-                    loadConfiguration(configPath.toString(), PRIO_DEFAULT);
+                    loadConfiguration(configFilePath.toString(), PRIO_DEFAULT);
                 }
+
             }
-#endif
         }
     }
     catch (Poco::Exception& ex)

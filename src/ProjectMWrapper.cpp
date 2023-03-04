@@ -4,6 +4,7 @@
 
 #include "notifications/DisplayToastNotification.h"
 
+#include <Poco/File.h>
 #include <Poco/NotificationCenter.h>
 
 #include <Poco/Util/Application.h>
@@ -66,7 +67,18 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
 
         for (const auto& presetPath : presetPaths)
         {
-            projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
+            Poco::File file(presetPath);
+            if (file.exists() && file.isFile())
+            {
+                projectm_playlist_add_preset(_playlist, presetPath.c_str(), false);
+            }
+            else
+            {
+                // Symbolic links also fall under this. Without complex resolving, we can't
+                // be sure what the link exactly points to, especially if a trailing slash is missing.
+                projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
+            }
+
         }
         projectm_playlist_sort(_playlist, 0, projectm_playlist_size(_playlist), SORT_PREDICATE_FILENAME_ONLY, SORT_ORDER_ASCENDING);
 
@@ -114,6 +126,15 @@ void ProjectMWrapper::RenderFrame() const
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    size_t currentMeshX{0};
+    size_t currentMeshY{0};
+    projectm_get_mesh_size(_projectM, &currentMeshX, &currentMeshY);
+    if (currentMeshX != _config->getInt("meshX", 220) ||
+        currentMeshY != _config->getInt("meshY", 125))
+    {
+        projectm_set_mesh_size(_projectM, _config->getInt("meshX", 220), _config->getInt("meshY", 125));
+    }
+
     projectm_opengl_render_frame(_projectM);
 }
 
@@ -144,7 +165,7 @@ void ProjectMWrapper::PresetSwitchedEvent(bool isHardCut, unsigned int index, vo
     auto that = reinterpret_cast<ProjectMWrapper*>(context);
     auto presetName = projectm_playlist_item(that->_playlist, index);
     poco_information_f1(that->_logger, "Displaying preset: %s", std::string(presetName));
-    projectm_free_string(presetName);
+    projectm_playlist_free_string(presetName);
 
     Poco::NotificationCenter::defaultCenter().postNotification(new UpdateWindowTitleNotification);
 }
@@ -202,7 +223,11 @@ std::vector<std::string> ProjectMWrapper::GetPathListWithDefault(const std::stri
     _config->keys(baseKey, subKeys);
     for (const auto& key : subKeys)
     {
-        pathList.push_back(_config->getString(baseKey + "." + key, ""));
+        auto path = _config->getString(baseKey + "." + key, "");
+        if (!path.empty())
+        {
+            pathList.push_back(std::move(path));
+        }
     }
     return pathList;
 }

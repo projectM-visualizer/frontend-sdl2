@@ -82,7 +82,7 @@ void SettingsWindow::Draw()
 
                     ImGui::TableNextRow();
                     LabelWithTooltip("Per-Point Mesh Size X/Y", "Size of the per-point transformation grid.\nHigher values produce better quality, but require more CPU time to calculate.");
-                    IntegerSettingVec("projectM.meshX", "projectM.meshY", 200, 125, 8, 250);
+                    IntegerSettingVec("projectM.meshX", "projectM.meshY", 64, 48, 8, 300);
 
                     ImGui::EndTable();
                 }

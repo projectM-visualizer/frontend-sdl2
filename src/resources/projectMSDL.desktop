@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=projectM
+GenericName=Milkdrop-compatible Music Visualizer
+Icon=projectMSDL
+TryExec=projectMSDL
+Exec=projectMSDL
+Terminal=false
+Categories=Audio;Video;AudioVideo
+StartupWMClass=projectMSDL

@@ -16,10 +16,14 @@ and `sudo make install` [libprojectM](https://github.com/projectM-visualizer/pro
 
 ### Dependencies
 
-This project requires two third-party libraries in addition to libprojectM's core library dependencies:
+This project requires third-party libraries in addition to libprojectM's core library dependencies:
 
 - SDL2 (version 2.0.16 or higher)
-- POCO (version 1.12 or higher)
+- POCO (recommended version 1.12 or higher, minimum is 1.9.x)
+- Freetype 2 (optional, will provide better looking UI text)
+
+**Important**: projectMSDL will _not compile_ against Poco versions from 1.10.0 up to 1.11.1, as these versions of Poco
+include a serious issue that causes the application to crash. Either use Poco 1.9.x, or upgrade to 1.11.2 or higher.
 
 Depending on your needs, you can either build them yourself or install them using your favorite package manager. Here
 are some examples for the three major desktop platforms:

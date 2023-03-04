@@ -43,6 +43,10 @@ else()
             )
 endif()
 
+set_source_files_properties(ProjectMSDLApplication.cpp PROPERTIES
+        COMPILE_DEFINITIONS PROJECTMSDL_CONFIG_LOCATION=\"${DEFAULT_CONFIG_PATH}\"
+        )
+
 target_compile_definitions(projectMSDL
         PRIVATE
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
