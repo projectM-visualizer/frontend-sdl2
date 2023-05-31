@@ -230,8 +230,13 @@ void SDLRenderingWindow::CreateSDLWindow()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #endif
 
-    _renderingWindow = SDL_CreateWindow("projectM", left, top, width, height,
+    if(_config->getInt("window.id", -1) == -1) {
+        _renderingWindow = SDL_CreateWindow("projectM", left, top, width, height,
                                         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    } else {
+        SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "1");
+        _renderingWindow = SDL_CreateWindowFrom((void*)(uintptr_t)_config->getInt("window.id"));
+    }
     if (!_renderingWindow)
     {
         auto errorMessage = "Could not create SDL rendering window. Error: " + std::string(SDL_GetError());

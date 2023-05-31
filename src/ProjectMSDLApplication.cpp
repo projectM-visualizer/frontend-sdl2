@@ -160,6 +160,10 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<number>", true)
                           .binding("projectM.beatSensitivity", _commandLineOverrides));
 
+    options.addOption(Option("winId", "wid",
+                             "Force custom Window ID.", false, "<number>", true)
+                          .binding("window.id", _commandLineOverrides));
+
 }
 
 int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)
