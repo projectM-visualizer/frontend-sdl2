@@ -54,5 +54,7 @@ protected:
 
     TextureSharing _textureSharing;
 
+    bool _textureSharingEnabled = false;
+
     Poco::Logger& _logger{Poco::Logger::get("SDLRenderingWindow")}; //!< The class logger.
 };

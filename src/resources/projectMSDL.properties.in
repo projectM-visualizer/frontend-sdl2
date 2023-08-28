@@ -69,6 +69,8 @@ projectM.hardCutDuration = 20
 # on presets using the aspect ration actively.
 projectM.aspectCorrectionEnabled = true
 
+# If enabled, texture sharing via Syphon is enabled. This allows projectM to share full frame rate video with other applications.
+projectM.textureSharingEnabled = false
 
 ### Logging settings
 

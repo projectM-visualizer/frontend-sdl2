@@ -160,6 +160,10 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<number>", true)
                           .binding("projectM.beatSensitivity", _commandLineOverrides));
 
+    options.addOption(Option("textureSharingEnabled", "", "Syphon texture sharing enabled.",
+                             false, "<0/1>", true)
+                          .binding("projectM.textureSharingEnabled", _commandLineOverrides));
+
 }
 
 int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)

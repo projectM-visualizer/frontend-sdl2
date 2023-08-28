@@ -6,7 +6,6 @@
 
 #include <SDL2/SDL_opengl.h>
 
-
 const char* ProjectMWrapper::name() const
 {
     return "ProjectM Wrapper";
@@ -18,7 +17,6 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
 
     if (!_projectM)
     {
-
         auto& sdlWindow = app.getSubsystem<SDLRenderingWindow>();
 
         int canvasWidth{0};
@@ -60,7 +58,10 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
             projectm_playlist_sort(_playlist, 0, projectm_playlist_size(_playlist), SORT_PREDICATE_FILENAME_ONLY, SORT_ORDER_ASCENDING);
         }
 
-        _textureSharing.initialize(canvasWidth, canvasHeight);
+        _textureSharingEnabled = _config->getBool("textureSharingEnabled", false);
+        if (_textureSharingEnabled) {
+            _textureSharing.initialize(canvasWidth, canvasHeight);
+        }
     }
 }
 
@@ -101,7 +102,9 @@ void ProjectMWrapper::RenderFrame()
 
     projectm_opengl_render_frame(_projectM);
 
-    _textureSharing.publish();
+    if (_textureSharingEnabled) {
+        _textureSharing.publish();
+    }
 }
 
 void ProjectMWrapper::DisplayInitialPreset()
