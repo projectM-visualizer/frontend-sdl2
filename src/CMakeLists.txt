@@ -48,9 +48,11 @@ target_compile_definitions(projectMSDL
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
         )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ObjC++")
-
-find_library(SYPHON Syphon ${PROJECT_SOURCE_DIR})
+if (APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ObjC++")
+        find_library(SYPHON Syphon ${PROJECT_SOURCE_DIR})
+        target_link_libraries(projectMSDL PRIVATE ${SYPHON})
+endif()
 
 target_link_libraries(projectMSDL
         PRIVATE
@@ -59,7 +61,6 @@ target_link_libraries(projectMSDL
         SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>
         SDL2::SDL2main
         glad
-        ${SYPHON}
         )
 
 if(MSVC)
