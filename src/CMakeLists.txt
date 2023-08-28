@@ -17,6 +17,8 @@ add_executable(projectMSDL WIN32
         RenderLoop.h
         SDLRenderingWindow.h
         SDLRenderingWindow.cpp
+        TextureSharing.h
+        TextureSharing.mm
         )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -46,12 +48,18 @@ target_compile_definitions(projectMSDL
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
         )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ObjC++")
+
+find_library(SYPHON Syphon ${PROJECT_SOURCE_DIR})
+
 target_link_libraries(projectMSDL
         PRIVATE
         libprojectM::playlist
         Poco::Util
         SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>
         SDL2::SDL2main
+        glad
+        ${SYPHON}
         )
 
 if(MSVC)

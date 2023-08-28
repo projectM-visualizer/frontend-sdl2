@@ -7,7 +7,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE YES)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(projectM-SDL
-        LANGUAGES C CXX
+        LANGUAGES C CXX OBJCXX
         VERSION 2.0.0
         )
 
@@ -32,6 +32,7 @@ include(SDL2Target)
 include(dependencies_check.cmake)
 
 add_subdirectory(src)
+add_subdirectory(src/glad)
 
 if(ENABLE_TESTING)
     add_subdirectory(test)

@@ -6,6 +6,7 @@
 
 #include <SDL2/SDL_opengl.h>
 
+
 const char* ProjectMWrapper::name() const
 {
     return "ProjectM Wrapper";
@@ -17,6 +18,7 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
 
     if (!_projectM)
     {
+
         auto& sdlWindow = app.getSubsystem<SDLRenderingWindow>();
 
         int canvasWidth{0};
@@ -57,6 +59,8 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
             projectm_playlist_add_path(_playlist, presetPath.c_str(), true, false);
             projectm_playlist_sort(_playlist, 0, projectm_playlist_size(_playlist), SORT_PREDICATE_FILENAME_ONLY, SORT_ORDER_ASCENDING);
         }
+
+        _textureSharing.initialize(canvasWidth, canvasHeight);
     }
 }
 
@@ -88,15 +92,16 @@ projectm_playlist_handle ProjectMWrapper::Playlist() const
 int ProjectMWrapper::TargetFPS()
 {
     return _config->getInt("fps", 60);
-    ;
 }
 
-void ProjectMWrapper::RenderFrame() const
+void ProjectMWrapper::RenderFrame()
 {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     projectm_opengl_render_frame(_projectM);
+
+    _textureSharing.publish();
 }
 
 void ProjectMWrapper::DisplayInitialPreset()

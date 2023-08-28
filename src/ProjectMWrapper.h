@@ -10,6 +10,8 @@
 
 #include <memory>
 
+#include "TextureSharing.h"
+
 class ProjectMWrapper : public Poco::Util::Subsystem
 {
 public:
@@ -30,7 +32,7 @@ public:
     /**
      * Renders a single projectM frame.
      */
-    void RenderFrame() const;
+    void RenderFrame();
 
     int TargetFPS();
 
@@ -44,12 +46,13 @@ public:
 
     void uninitialize() override;
 
-
 protected:
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
 
     projectm_handle _projectM{nullptr}; //!< Pointer to the projectM instance used by the application.
     projectm_playlist_handle _playlist{nullptr}; //!< Pointer to the projectM playlist manager instance.
+
+    TextureSharing _textureSharing;
 
     Poco::Logger& _logger{Poco::Logger::get("SDLRenderingWindow")}; //!< The class logger.
 };

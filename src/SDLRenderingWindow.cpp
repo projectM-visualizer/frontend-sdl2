@@ -2,7 +2,7 @@
 
 #include <Poco/Util/Application.h>
 
-#include <SDL2/SDL_opengl.h>
+#include <glad/glad.h>
 
 const char* SDLRenderingWindow::name() const
 {
@@ -246,6 +246,8 @@ void SDLRenderingWindow::CreateSDLWindow()
         poco_fatal(_logger, errorMessage);
         throw Poco::Exception(errorMessage);
     }
+
+    gladLoadGLLoader(SDL_GL_GetProcAddress);
 
     SDL_SetWindowTitle(_renderingWindow, "projectM");
     SDL_GL_MakeCurrent(_renderingWindow, _glContext);
