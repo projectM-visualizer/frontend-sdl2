@@ -4,8 +4,8 @@
 
 void TextureSharing::createFramebuffer(int width, int height)
 {
-    glGenFramebuffers(1, &_shareFamebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, _shareFamebuffer);
+    glGenFramebuffers(1, &_shareFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _shareFramebuffer);
 
     glGenTextures(1, &_shareTexture);
     glBindTexture(GL_TEXTURE_2D, _shareTexture);
@@ -41,7 +41,7 @@ void TextureSharing::initialize(int width, int height)
 void TextureSharing::publish()
 {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _shareFamebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _shareFramebuffer);
 
     glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 

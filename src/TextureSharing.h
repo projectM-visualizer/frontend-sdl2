@@ -28,7 +28,7 @@ protected:
 
     Poco::Logger& _logger{Poco::Logger::get("TextureSharing")}; //!< The class logger.
 
-    GLuint _shareFamebuffer, _shareTexture;
+    GLuint _shareFramebuffer, _shareTexture;
     int _width, _height;
 
     SyphonOpenGLServer* _syphonServer = NULL;
