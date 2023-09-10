@@ -48,10 +48,11 @@ target_compile_definitions(projectMSDL
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
         )
 
-if (APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ObjC++")
-        find_library(SYPHON Syphon ${PROJECT_SOURCE_DIR})
-        target_link_libraries(projectMSDL PRIVATE ${SYPHON})
+if(APPLE)
+    include(fetch_syphon.cmake)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ObjC++")
+    find_library(SYPHON Syphon ${PROJECT_SOURCE_DIR})
+    target_link_libraries(projectMSDL PRIVATE ${SYPHON})
 endif()
 
 target_link_libraries(projectMSDL

@@ -7,7 +7,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE YES)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(projectM-SDL
-        LANGUAGES C CXX OBJCXX
+        LANGUAGES C CXX
         VERSION 2.0.0
         )
 
