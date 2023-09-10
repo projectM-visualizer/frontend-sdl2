@@ -11,5 +11,4 @@ file(ARCHIVE_EXTRACT
     INPUT Syphon.zip
     DESTINATION .
     PATTERNS "Syphon SDK 5/Syphon.framework/"
-    VERBOSE
 )
