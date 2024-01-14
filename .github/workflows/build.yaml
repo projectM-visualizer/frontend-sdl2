@@ -1,10 +1,13 @@
-name: Ubuntu Linux (x86_64)
+# Build check workflow
+# Used to check if projectMSDL compiles with upstream master of libprojectM.
+# The resulting binaries are not considered for public use though.
+name: Build Check
 
 on: [ push, pull_request ]
 
 jobs:
-  build:
-    name: Static libprojectM
+  build-linux:
+    name: Ubuntu Linux, x86_64
     runs-on: ubuntu-latest
 
     steps:
@@ -12,19 +15,37 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt update
-          sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev ninja-build
+          sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev ninja-build libssl-dev
+
+      # We need to build/link Poco ourselves as static libraries, because Ubuntu Jammy ships with a broken Poco 1.11.0
+      - name: Checkout Poco Sources
+        uses: actions/checkout@v3
+        with:
+          repository: pocoproject/poco
+          path: poco
+          ref: 'poco-1.12.2'
+          submodules: recursive
+
+      - name: Build Poco
+        run: |
+          mkdir cmake-build-poco
+          cmake -G Ninja -S poco -B cmake-build-poco -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-poco -DENABLE_MONGODB=OFF -DENABLE_REDIS=OFF -DENABLE_PAGECOMPILER=OFF -DENABLE_PAGECOMPILER_FILE2PAGE=OFF -DENABLE_ACTIVERECORD=OFF -DENABLE_ACTIVERECORD_COMPILER=OFF -DENABLE_DATA_ODBC=OFF -DENABLE_DATA_POSTGRESQL=OFF -DENABLE_DATA_MYSQL=OFF -DENABLE_JWT=OFF -DENABLE_PROMETHEUS=OFF
+          cmake --build cmake-build-poco --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-poco"
 
       - name: Checkout libprojectM Sources
         uses: actions/checkout@v3
         with:
           repository: projectM-visualizer/projectm
           path: projectm
+          submodules: recursive
 
       - name: Build/Install libprojectM
         run: |
           mkdir cmake-build-libprojectm
-          cmake -G Ninja -S projectm -B cmake-build-libprojectm -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install-libprojectm
-          cmake --build cmake-build-libprojectm --parallel --target install
+          cmake -G Ninja -S projectm -B cmake-build-libprojectm -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-libprojectm
+          cmake --build cmake-build-libprojectm --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm"
 
       - name: Checkout frontend-sdl2 Sources
         uses: actions/checkout@v3
@@ -35,5 +56,76 @@ jobs:
       - name: Build frontend-sdl2
         run: |
           mkdir cmake-build-frontend-sdl2
-          cmake -G Ninja -S frontend-sdl2 -B cmake-build-frontend-sdl2 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install-libprojectm -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install-frontend-sdl2
+          cmake -G Ninja -S frontend-sdl2 -B cmake-build-frontend-sdl2 -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install-libprojectm;${GITHUB_WORKSPACE}/install-poco" "-DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-frontend-sdl2"
           cmake --build cmake-build-frontend-sdl2 --parallel
+  #          cmake --install "${{ github.workspace }}/cmake-build-frontend-sdl2"
+
+  build-windows:
+    name: Windows, x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Install Build Dependencies
+        run: vcpkg --triplet=x64-windows-static install glew gtest sdl2 poco
+
+      - name: Checkout libprojectM Sources
+        uses: actions/checkout@v3
+        with:
+          repository: projectM-visualizer/projectm
+          path: projectm
+          submodules: recursive
+
+      - name: Build/Install libprojectM
+        run: |
+          mkdir cmake-build-libprojectm
+          cmake -G "Visual Studio 17 2022" -A "X64" -S "${{ github.workspace }}/projectm" -B "${{ github.workspace }}/cmake-build-libprojectm" -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install-libprojectm" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=NO
+          cmake --build "${{ github.workspace }}/cmake-build-libprojectm" --config Release --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm" --config Release
+
+      - name: Checkout projectMSDL Sources
+        uses: actions/checkout@v3
+        with:
+          path: frontend-sdl2
+          submodules: recursive
+
+      - name: Build projectMSDL
+        run: |
+          mkdir cmake-build-frontend-sdl2
+          cmake -G "Visual Studio 17 2022" -A "X64" -S "${{ github.workspace }}/frontend-sdl2" -B "${{ github.workspace }}/cmake-build-frontend-sdl2" -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static  -DCMAKE_PREFIX_PATH="${{ github.workspace }}/install-libprojectm" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install-frontend-sdl2" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" -DCMAKE_VERBOSE_MAKEFILE=YES -DSDL2_LINKAGE=static -DBUILD_TESTING=YES
+          cmake --build "${{ github.workspace }}/cmake-build-frontend-sdl2" --parallel --config Release
+  #          cmake --install "${{ github.workspace }}/cmake-build-frontend-sdl2" --config Release
+
+  build-darwin:
+    name: macOS, x86_64
+    runs-on: macos-latest
+
+    steps:
+      - name: Install Build Dependencies
+        run: brew install sdl2 ninja googletest poco
+
+      - name: Checkout libprojectM Sources
+        uses: actions/checkout@v3
+        with:
+          repository: projectM-visualizer/projectm
+          path: projectm
+          submodules: recursive
+
+      - name: Build/Install libprojectM
+        run: |
+          mkdir cmake-build-libprojectm
+          cmake -G Ninja -S "${{ github.workspace }}/projectm" -B "${{ github.workspace }}/cmake-build-libprojectm" -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}//install-libprojectm"
+          cmake --build "${{ github.workspace }}/cmake-build-libprojectm" --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm"
+
+      - name: Checkout projectMSDL Sources
+        uses: actions/checkout@v3
+        with:
+          path: frontend-sdl2
+          submodules: recursive
+
+      - name: Build projectMSDL
+        run: |
+          mkdir cmake-build-frontend-sdl2
+          cmake -G Ninja -S "${{ github.workspace }}/frontend-sdl2" -B "${{ github.workspace }}/cmake-build-frontend-sdl2" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ github.workspace }}/install-libprojectm" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}//install-frontend-sdl2"
+          cmake --build "${{ github.workspace }}/cmake-build-frontend-sdl2" --parallel
+#          cmake --install "${{ github.workspace }}/cmake-build-frontend-sdl2"

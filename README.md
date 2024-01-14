@@ -4,13 +4,15 @@ This is a reference implementation of an applicatiaon that makes use of the proj
 
 It will listen to audio input and produce mesmerizing visuals. Some commands are supported.
 
-This project is in a bit of a transition state and is in the process of being modernized. There are many rough edges at present.
+This project is in a bit of a transition state and is in the process of being modernized. There are many rough edges at
+present.
 
 ## Building from source
 
 ### Build and install libprojectM
 
-First, [build](https://github.com/projectM-visualizer/projectm/wiki/Building-libprojectM) and `sudo make install` [libprojectM](https://github.com/projectM-visualizer/projectm)
+First, [build](https://github.com/projectM-visualizer/projectm/wiki/Building-libprojectM)
+and `sudo make install` [libprojectM](https://github.com/projectM-visualizer/projectm)
 
 ### Dependencies
 
@@ -20,6 +22,9 @@ First, [build](https://github.com/projectM-visualizer/projectm/wiki/Building-lib
 apt install libsdl2-dev libpoco-dev cmake  # debian/ubuntu
 brew install sdl2  # macOS
 ```
+
+**Important**: projectMSDL will _not compile_ against Poco versions from 1.10.0 up to 1.11.1, as these versions of Poco
+include a serious issue that causes the application to crash. Either use Poco 1.9.x, or upgrade to 1.11.2 or higher.
 
 ### Build
 
@@ -33,21 +38,28 @@ make
 If all runs successfully, you should have an executable.
 
 #### Linux
+
 [Note: 'make install' is unimplemented at the moment. Just copy the binary 'projectMSDL' to your choice of run-path. E.g.]
+
 ```shell
 cp src/projectMSDL ~/bin
 ```
+
 Create a configuration file or projectMSDL will complain, a lot.
+
 ```shell
 mkdir ~/.config/projectM
 cp src/projectMSDL.properties ~/.config/projectM
 ```
-The default audio device (-1) may or may not be your actual default audio output. `projectMSDL -l` will list audio devices; hopefully, one of them looks familiar - like "Monitor of ... digital stereo" or "Monitor of USB Audio Device ..." (if you have one of those).
 
+The default audio device (-1) may or may not be your actual default audio output. `projectMSDL -l` will list audio
+devices; hopefully, one of them looks familiar - like "Monitor of ... digital stereo" or "Monitor of USB Audio
+Device ..." (if you have one of those).
 
 ### Run
 
-You should have a directory of visual presets you wish to use. You can fetch a giant trove of curated presets [here](https://github.com/projectM-visualizer/presets-cream-of-the-crop).
+You should have a directory of visual presets you wish to use. You can fetch a giant trove of curated
+presets [here](https://github.com/projectM-visualizer/presets-cream-of-the-crop).
 
 Provide the presets path you wish to use when starting projectMSDL:
 
