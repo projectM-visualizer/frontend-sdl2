@@ -18,12 +18,15 @@ public:
         TogglePresetLocked
     };
 
-    explicit PlaybackControlNotification(Action action);
+    explicit PlaybackControlNotification(Action action, bool smoothTransition = false);
 
     std::string name() const override;
 
     Action ControlAction() const;
 
+    bool SmoothTransition() const;
+
 private:
     Action _action;
+    bool _smoothTransition{};
 };

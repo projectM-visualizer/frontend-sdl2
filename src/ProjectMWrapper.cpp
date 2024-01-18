@@ -32,11 +32,6 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         auto texturePaths = GetPathListWithDefault("texturePath", app.config().getString("", ""));
 
         _projectM = projectm_create();
-        if (_projectM == nullptr)
-        {
-            poco_fatal(_logger, "Could not create projectM instance!");
-            throw std::runtime_error("Could not create projectM instance!");
-        }
 
         projectm_set_window_size(_projectM, canvasWidth, canvasHeight);
         projectm_set_fps(_projectM, _config->getInt("fps", 60));
@@ -66,11 +61,6 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
 
         // Playlist
         _playlist = projectm_playlist_create(_projectM);
-        if (_playlist == nullptr)
-        {
-            poco_fatal(_logger, "Could not create projectM playlist manager!");
-            throw std::runtime_error("Could not create projectM playlist manager!");
-        }
 
         projectm_playlist_set_shuffle(_playlist, _config->getBool("shuffleEnabled", true));
 
@@ -164,21 +154,21 @@ void ProjectMWrapper::PlaybackControlNotificationHandler(const Poco::AutoPtr<Pla
     switch (notification->ControlAction())
     {
         case PlaybackControlNotification::Action::NextPreset:
-            projectm_playlist_play_next(_playlist, true);
+            projectm_playlist_play_next(_playlist, !notification->SmoothTransition());
             break;
 
         case PlaybackControlNotification::Action::PreviousPreset:
-            projectm_playlist_play_previous(_playlist, true);
+            projectm_playlist_play_previous(_playlist, !notification->SmoothTransition());
             break;
 
         case PlaybackControlNotification::Action::LastPreset:
-            projectm_playlist_play_last(_playlist, true);
+            projectm_playlist_play_last(_playlist, !notification->SmoothTransition());
             break;
 
         case PlaybackControlNotification::Action::RandomPreset: {
             bool shuffleEnabled = projectm_playlist_get_shuffle(_playlist);
             projectm_playlist_set_shuffle(_playlist, true);
-            projectm_playlist_play_next(_playlist, true);
+            projectm_playlist_play_next(_playlist, !notification->SmoothTransition());
             projectm_playlist_set_shuffle(_playlist, shuffleEnabled);
             break;
         }
