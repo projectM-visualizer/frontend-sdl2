@@ -26,7 +26,7 @@ endif()
 
 find_package(projectM4 REQUIRED COMPONENTS Playlist)
 find_package(SDL2 REQUIRED)
-find_package(Poco REQUIRED COMPONENTS Util)
+find_package(Poco REQUIRED COMPONENTS JSON XML Util Foundation)
 
 include(SDL2Target)
 include(dependencies_check.cmake)
