@@ -31,7 +31,9 @@ add_library(ProjectMSDL-GUI STATIC
         ProjectMGUI.h
         ToastMessage.cpp
         ToastMessage.h
-        HelpWindow.cpp HelpWindow.h SettingsWindow.cpp SettingsWindow.h)
+        HelpWindow.cpp HelpWindow.h SettingsWindow.cpp SettingsWindow.h
+        SystemBrowser.cpp
+        SystemBrowser.h)
 
 target_include_directories(ProjectMSDL-GUI
         PUBLIC

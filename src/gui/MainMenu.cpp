@@ -1,8 +1,10 @@
-#include "MainMenu.h"
+#include "gui/MainMenu.h"
 
-#include "ProjectMGUI.h"
 #include "ProjectMWrapper.h"
 #include "AudioCapture.h"
+
+#include "gui/ProjectMGUI.h"
+#include "gui/SystemBrowser.h"
 
 #include "notifications/PlaybackControlNotification.h"
 #include "notifications/QuitNotification.h"
@@ -13,16 +15,6 @@
 #include <Poco/NotificationCenter.h>
 
 #include <Poco/Util/Application.h>
-
-#ifdef __MSC_VER__
-#include <shellapi.h>
-#include <windows.h>
-#endif
-#ifdef __linux__
-#include <Poco/Process.h>
-#endif
-#ifdef __APPLE__
-#endif
 
 MainMenu::MainMenu(ProjectMGUI& gui)
     : _notificationCenter(Poco::NotificationCenter::defaultCenter())
@@ -159,28 +151,15 @@ void MainMenu::Draw()
 
             if (ImGui::MenuItem("Visit the projectM Wiki on GitHub"))
             {
-                OpenURL("https://github.com/projectM-visualizer/projectm/wiki");
+                SystemBrowser::OpenURL("https://github.com/projectM-visualizer/projectm/wiki");
             }
             if (ImGui::MenuItem("Report a Bug or Request a Feature"))
             {
-                OpenURL("https://github.com/projectM-visualizer/projectm/issues/new/choose");
+                SystemBrowser::OpenURL("https://github.com/projectM-visualizer/projectm/issues/new/choose");
             }
             ImGui::EndMenu();
         }
 
         ImGui::EndMainMenuBar();
     }
-}
-
-void MainMenu::OpenURL(const std::string& url)
-{
-#ifdef __MSC_VER__
-    ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
-#endif
-#ifdef __linux__
-    auto handle = Poco::Process::launch("xdg-open", {url});
-    handle.wait();
-#endif
-#ifdef __APPLE__
-#endif
 }
