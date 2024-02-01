@@ -5,8 +5,8 @@ add_library(ImGui STATIC
         vendor/imgui/imgui_draw.cpp
         vendor/imgui/imgui_tables.cpp
         vendor/imgui/imgui_widgets.cpp
-        vendor/imgui/backends/imgui_impl_sdl.cpp
-        vendor/imgui/backends/imgui_impl_sdl.h
+        vendor/imgui/backends/imgui_impl_sdl2.cpp
+        vendor/imgui/backends/imgui_impl_sdl2.h
         vendor/imgui/backends/imgui_impl_opengl3.cpp
         vendor/imgui/backends/imgui_impl_opengl3.h
         vendor/imgui/backends/imgui_impl_opengl3_loader.h
@@ -45,7 +45,7 @@ add_executable(ImGuiBinaryToCompressedC EXCLUDE_FROM_ALL
 # Add SDL2/OpenGL 3 Dear ImGui example application target for testing
 add_executable(ImGuiDemo EXCLUDE_FROM_ALL
         vendor/imgui/imgui_demo.cpp
-        vendor/imgui/examples/example_sdl_opengl3/main.cpp
+        vendor/imgui/examples/example_sdl2_opengl3/main.cpp
         )
 
 target_link_libraries(ImGuiDemo
