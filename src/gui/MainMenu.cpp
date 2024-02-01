@@ -157,6 +157,10 @@ void MainMenu::Draw()
             {
                 SystemBrowser::OpenURL("https://github.com/projectM-visualizer/projectm/issues/new/choose");
             }
+            if (ImGui::MenuItem("Sponsor projectM on OpenCollective"))
+            {
+                SystemBrowser::OpenURL("https://opencollective.com/projectm");
+            }
             ImGui::EndMenu();
         }
 
