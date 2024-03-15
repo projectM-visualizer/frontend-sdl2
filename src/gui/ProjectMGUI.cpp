@@ -125,6 +125,16 @@ void ProjectMGUI::Toggle()
     _visible = !_visible;
 }
 
+void ProjectMGUI::Visible(bool visible)
+{
+    _visible = visible;
+}
+
+bool ProjectMGUI::Visible() const
+{
+    return _visible;
+}
+
 void ProjectMGUI::Draw()
 {
     // Don't render UI at all if there's no need.

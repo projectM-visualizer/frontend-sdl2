@@ -70,6 +70,18 @@ public:
     void Toggle();
 
     /**
+     * @brief Sets the visibility of the UI.
+     * @param visible true if the UI will be rendered, false if not.
+     */
+    void Visible(bool visible);
+
+    /**
+     * @brief Returns the visibiity of the UI.
+     * @return true if the UI is visible, false if not.
+     */
+    bool Visible() const;
+
+    /**
      * @brief Draws the UI, including toasts.
      * If neither a toast nor the UI are visible, this is basically a no-op.
      */

@@ -111,6 +111,11 @@ void SDLRenderingWindow::Windowed()
     _fullscreen = false;
 }
 
+void SDLRenderingWindow::ShowCursor(bool visible)
+{
+    SDL_ShowCursor(visible);
+}
+
 void SDLRenderingWindow::NextDisplay()
 {
     auto numDisplays = SDL_GetNumVideoDisplays();

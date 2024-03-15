@@ -172,6 +172,7 @@ void RenderLoop::KeyEvent(const SDL_KeyboardEvent& event, bool down)
     {
         case SDLK_ESCAPE:
             _projectMGui.Toggle();
+            _sdlRenderingWindow.ShowCursor(_projectMGui.Visible());
             break;
 
         case SDLK_a: {

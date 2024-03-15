@@ -57,6 +57,12 @@ public:
     void Windowed();
 
     /**
+     * @brief Sets the visibility of the mouse cursor
+     * @param visible true if the cursor should be displayed, false otherwise.
+     */
+    void ShowCursor(bool visible);
+
+    /**
      * @brief Moves the current window to the next display.
      *
      * Internally, this is done by finding the current display using the X/Y coords, then move it to the next
