@@ -23,7 +23,13 @@ void ProjectMGUI::initialize(Poco::Util::Application& app)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    (void) io;
+
+    Poco::Path userConfigurationDir = Poco::Path::configHome();
+    userConfigurationDir.makeDirectory().append("projectM/");
+    userConfigurationDir.setFileName(app.config().getString("application.baseName") + ".UI.ini");
+    _uiIniFileName = userConfigurationDir.toString();
+
+    io.IniFilename = _uiIniFileName.c_str();
 
     ImGui::StyleColorsDark();
 

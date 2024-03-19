@@ -134,6 +134,8 @@ private:
 
     Poco::NObserver<ProjectMGUI, DisplayToastNotification> _displayToastNotificationObserver{*this, &ProjectMGUI::DisplayToastNotificationHandler};
 
+    std::string _uiIniFileName; //!< Path and filename of the UI configuration (positions etc.)
+
     SDL_Window* _renderingWindow{nullptr}; //!< Pointer to the SDL window used for rendering.
     SDL_GLContext _glContext{nullptr}; //!< Pointer to the OpenGL context associated with the window.
     ImFont* _uiFont{nullptr}; //!< Main UI font (monospaced).
