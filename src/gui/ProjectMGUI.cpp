@@ -178,26 +178,6 @@ void ProjectMGUI::Draw()
         _mainMenu.Draw();
         _settingsWindow.Draw();
         _helpWindow.Draw();
-
-        try
-        {
-
-            if (_fileChooser.Draw())
-            {
-                // Preset selected, load & switch.
-                std::string presetName = Poco::Path(_fileChooser.SelectedFile().path()).getFileName();
-
-                int ratingList[2]{};
-                projectm_playlist_add_preset(_projectMWrapper->Playlist(),
-                                             _fileChooser.SelectedFile().path().c_str(),
-                                             false);
-                projectm_playlist_set_position(_projectMWrapper->Playlist(), projectm_playlist_size(_projectMWrapper->Playlist()) - 1, true);
-            }
-        }
-        catch (Poco::Exception& ex)
-        {
-            poco_error_f1(_logger, "Exception in file chooser: %s", ex.message());
-        }
     }
 
     ImGui::Render();

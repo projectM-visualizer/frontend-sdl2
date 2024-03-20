@@ -1,6 +1,5 @@
 #pragma once
 
-#include "FileChooser.h"
 #include "HelpWindow.h"
 #include "MainMenu.h"
 #include "ToastMessage.h"
@@ -147,7 +146,6 @@ private:
 
     MainMenu _mainMenu{*this};
     SettingsWindow _settingsWindow{*this}; //!< The settings window.
-    FileChooser _fileChooser{"Load Preset", {"milk"}}; //!< File chooser dialog.
     HelpWindow _helpWindow; //!< Help window with shortcuts and tips.
 
     std::unique_ptr<ToastMessage> _toast; //!< Current toast to be displayed.
