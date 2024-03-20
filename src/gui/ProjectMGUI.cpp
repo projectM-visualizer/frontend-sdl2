@@ -13,6 +13,8 @@
 
 #include <Poco/Util/Application.h>
 
+#include <utility>
+
 const char* ProjectMGUI::name() const
 {
     return "Preset Selection GUI";
@@ -73,7 +75,7 @@ Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> ProjectMGUI::UserConfigurat
 
 void ProjectMGUI::CommandLineConfiguration(Poco::AutoPtr<Poco::Util::MapConfiguration> config)
 {
-    _commandLineOverrides = config;
+    _commandLineOverrides = std::move(config);
 }
 
 Poco::AutoPtr<Poco::Util::MapConfiguration> ProjectMGUI::CommandLineConfiguration()

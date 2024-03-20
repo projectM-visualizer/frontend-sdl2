@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FileChooser.h"
+
 #include <string>
 
 class ProjectMGUI;
@@ -87,4 +89,6 @@ private:
 
     ProjectMGUI& _gui; //!< The GUI subsystem.
     bool _visible{false}; //!< window visibility flag.
+
+    FileChooser _pathChooser{ FileChooser::Mode::Directory }; //!< The file chooser dialog to select preset and texture paths.
 };

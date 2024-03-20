@@ -128,6 +128,15 @@ void SettingsWindow::Draw()
 
     }
     ImGui::End();
+
+    if (_pathChooser.Draw())
+    {
+        auto& selectedDirectory = _pathChooser.SelectedFiles();
+        if (!selectedDirectory.empty())
+        {
+            _gui.UserConfiguration()->setString(_pathChooser.Context(), Poco::Path(selectedDirectory.at(0).path()).makeDirectory().toString());
+        }
+    }
 }
 
 void SettingsWindow::LabelWithTooltip(const std::string& label, const std::string& tooltipText)
@@ -161,6 +170,10 @@ void SettingsWindow::PathSetting(const std::string& property)
     ImGui::PushID(std::string(property + "_ChoosePathButton").c_str());
     if (ImGui::Button("..."))
     {
+        _pathChooser.CurrentDirectory(path);
+        _pathChooser.Title("Select directory");
+        _pathChooser.Context(property);
+        _pathChooser.Show();
     }
     ImGui::PopID();
 

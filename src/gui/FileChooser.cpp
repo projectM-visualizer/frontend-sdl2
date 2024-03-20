@@ -7,15 +7,77 @@
 
 #include <algorithm>
 
-FileChooser::FileChooser(std::string title, std::vector<std::string> extensions)
-    : _title(std::move(title))
-    , _extensions(std::move(extensions))
+FileChooser::FileChooser(FileChooser::Mode mode)
+    : _mode(mode)
 {
+}
+
+FileChooser::FileChooser(std::string title, const std::string& initialDirectory, Mode mode)
+    : _title(std::move(title))
+    , _mode(mode)
+{
+    if (!initialDirectory.empty())
+    {
+        ChangeDirectory(initialDirectory);
+    }
+}
+
+void FileChooser::Title(const std::string& title)
+{
+    _title = title;
+}
+
+void FileChooser::CurrentDirectory(const std::string& path)
+{
+    if (path.empty())
+    {
+        return;
+    }
+
+    ChangeDirectory(path);
+}
+
+void FileChooser::Context(const std::string& context)
+{
+    _context = context;
+}
+
+const std::string& FileChooser::Context() const
+{
+    return _context;
+}
+
+void FileChooser::AllowedExtensions(std::vector<std::string> extensions)
+{
+    _extensions = std::move(extensions);
+}
+
+const std::vector<std::string>& FileChooser::AllowedExtensions() const
+{
+    return _extensions;
+}
+
+
+void FileChooser::MultiSelect(bool enabled)
+{
+    _multiSelect = enabled;
+}
+
+bool FileChooser::MultiSelect() const
+{
+    return _multiSelect;
 }
 
 void FileChooser::Show()
 {
+    _selectedFiles.clear();
     _visible = true;
+}
+
+void FileChooser::Close()
+{
+    ImGui::CloseCurrentPopup();
+    _visible = false;
 }
 
 bool FileChooser::Draw()
@@ -32,7 +94,9 @@ bool FileChooser::Draw()
         ChangeDirectory(Poco::Path::home());
     }
 
-    if (ImGui::Begin(_title.c_str(), &_visible), ImGuiWindowFlags_NoCollapse)
+    ImGui::OpenPopup(_title.c_str());
+
+    if (ImGui::BeginPopupModal(_title.c_str(), &_visible, ImGuiWindowFlags_NoCollapse))
     {
         DrawNavButtons();
 
@@ -41,12 +105,14 @@ bool FileChooser::Draw()
         char pathBuffer[2048]{};
         strncpy(pathBuffer, _currentDir.toString().c_str(), std::min<size_t>(2047, _currentDir.toString().size()));
 
+        ImGui::SetNextItemWidth(-1);
+
         if (ImGui::InputText("##path", &pathBuffer[0], IM_ARRAYSIZE(pathBuffer)), ImGuiInputTextFlags_EnterReturnsTrue)
         {
             ChangeDirectory(std::string(pathBuffer));
         }
 
-        if (ImGui::BeginListBox("##filelist", ImVec2(-1, -1)))
+        if (ImGui::BeginListBox("##filelist", ImVec2(-1, -ImGui::GetTextLineHeight() - ImGui::GetStyle().FramePadding.y * 2 - 4)))
         {
             if (_currentDir.toString().empty())
             {
@@ -71,26 +137,56 @@ bool FileChooser::Draw()
             }
 
             ImGui::EndListBox();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, 0xFF000080);
+            if (ImGui::Button("Cancel"))
+            {
+                _selectedFiles.clear();
+                fileSelected = true;
+                Close();
+            }
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+            if (ImGui::Button("Select"))
+            {
+                for (auto index : _selectedFileIndices)
+                {
+                    _selectedFiles.emplace_back(_currentFileList.at(index));
+                }
+
+                if (_selectedFileIndices.empty() && _mode == Mode::Directory)
+                {
+                    _selectedFiles.emplace_back(Poco::Path(_currentDir).makeDirectory());
+                }
+                else
+                {
+                    // ToDo: Display "Select at least one entry from the list"
+                }
+
+                fileSelected = true;
+                Close();
+            }
+
+            ImGui::EndPopup();
         }
     }
     else
     {
-        _visible = false;
+        Close();
     }
 
-    ImGui::End();
 
     return fileSelected;
 }
 
-const Poco::File& FileChooser::SelectedFile() const
+const std::vector<Poco::File>& FileChooser::SelectedFiles() const
 {
-    return _selectedFile;
+    return _selectedFiles;
 }
 
 void FileChooser::DrawNavButtons()
 {
-    ImGui::Checkbox("Show hidden files", &_showhidden);
+    ImGui::Checkbox("Show hidden", &_showHidden);
 
     // Root path buttons first
     std::vector<std::string> roots;
@@ -131,7 +227,7 @@ bool FileChooser::PopulateFileList()
     int index = 0;
     for (const auto& file : _currentFileList)
     {
-        bool isSelected = _selectedFileIndex == index;
+        bool isSelected = (_selectedFileIndices.find(index) != _selectedFileIndices.end());
         bool isDirectory = false;
         try
         {
@@ -152,10 +248,11 @@ bool FileChooser::PopulateFileList()
 
         if (ImGui::Selectable(filename.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick))
         {
-            _selectedFileIndex = index;
+            UpdateListSelection(index, isSelected);
 
             if (ImGui::IsMouseDoubleClicked(0))
             {
+                _selectedFiles.clear();
                 if (isDirectory)
                 {
                     newDir = filePath;
@@ -164,8 +261,8 @@ bool FileChooser::PopulateFileList()
                 }
                 else
                 {
-                    _selectedFile = filePath;
-                    poco_debug_f1(_logger, "User selected file: %s", _selectedFile.path());
+                    _selectedFiles.emplace_back(filePath);
+                    poco_debug_f1(_logger, "User selected file: %s", filePath.toString());
                     fileSelected = true;
                     _visible = false;
                 }
@@ -183,12 +280,22 @@ bool FileChooser::PopulateFileList()
     return fileSelected;
 }
 
-void FileChooser::ChangeDirectory(const Poco::Path& newDirectory)
+void FileChooser::ChangeDirectory(Poco::Path newDirectory)
 {
+    newDirectory.makeDirectory();
+
+    if (_currentDir.toString() == newDirectory.toString())
+    {
+        return;
+    }
+
     _currentDir = newDirectory;
-    _currentDir.makeDirectory();
 
     _currentFileList.clear();
+    _selectedFileIndices.clear();
+    _selectedFileIndex = -1;
+
+    poco_information_f1(_logger, "Changing dir: %s", newDirectory.toString());
 
     if (_currentDir.toString().empty())
     {
@@ -219,13 +326,13 @@ void FileChooser::ChangeDirectory(const Poco::Path& newDirectory)
         {
         }
 
-        if (!isDirectory && (!isHidden || _showhidden))
+        if ((!isHidden || _showHidden))
         {
-            if (_extensions.empty())
+            if ((_mode != Mode::Directory && _extensions.empty()) || isDirectory)
             {
                 _currentFileList.push_back(*directoryIterator);
             }
-            else
+            else if (_mode != Mode::Directory)
             {
                 auto fileExtension = directoryIterator.path().getExtension();
                 for (const auto& extension : _extensions)
@@ -240,4 +347,52 @@ void FileChooser::ChangeDirectory(const Poco::Path& newDirectory)
 
         ++directoryIterator;
     }
+}
+
+void FileChooser::UpdateListSelection(int index, bool isSelected)
+{
+    // Reset selection on simple click
+    if (!ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && !ImGui::IsKeyDown(ImGuiKey_RightCtrl) && !ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsKeyDown(ImGuiKey_RightShift))
+    {
+        _selectedFileIndices.clear();
+        _selectedFileIndices.insert(index);
+    }
+
+    // Multiple selection on shift+click
+    if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift) && _selectedFileIndex >= 0)
+    {
+        if (!ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && !ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+        {
+            // Replace selection if ctrl is not pressed
+            _selectedFileIndices.clear();
+        }
+
+        if (!_multiSelect)
+        {
+            _selectedFileIndex = index;
+        }
+
+        for (int selIndex = std::min(_selectedFileIndex, index); selIndex <= std::max(_selectedFileIndex, index); selIndex++)
+        {
+            _selectedFileIndices.insert(selIndex);
+        }
+    }
+    // Toggle selection with ctrl+click
+    else if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+    {
+        if (isSelected)
+        {
+            _selectedFileIndices.erase(index);
+        }
+        else
+        {
+            if (!_multiSelect)
+            {
+                _selectedFileIndices.clear();
+            }
+            _selectedFileIndices.insert(index);
+        }
+    }
+
+    _selectedFileIndex = index;
 }
