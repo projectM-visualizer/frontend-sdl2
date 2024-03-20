@@ -34,11 +34,12 @@ void SettingsWindow::Draw()
 
             if (ImGui::BeginTabItem("projectM"))
             {
-                if (ImGui::BeginTable("projectM", 3, tableFlags))
+                if (ImGui::BeginTable("projectM", 4, tableFlags))
                 {
                     ImGui::TableSetupColumn("##desc", ImGuiTableColumnFlags_WidthFixed, .0f);
                     ImGui::TableSetupColumn("##setting", ImGuiTableColumnFlags_WidthStretch, .0f);
                     ImGui::TableSetupColumn("##reset", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+                    ImGui::TableSetupColumn("##override", ImGuiTableColumnFlags_WidthFixed, .0f);
 
                     ImGui::TableNextRow();
                     LabelWithTooltip("Preset Path", "Path to search for preset files if no playlist is loaded.");
@@ -146,20 +147,13 @@ void SettingsWindow::PathSetting(const std::string& property)
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto path = Poco::Util::Application::instance().config().getString(property, "");
+    auto path = _gui.UserConfiguration()->getString(property, "");
     char pathBuffer[2048]{};
     strncpy(pathBuffer, path.c_str(), std::min<size_t>(2047, path.size()));
 
-    bool isOverridden{false};
-    if (_gui.CommandLineConfiguration()->has(property))
-    {
-        isOverridden = true;
-        ImGui::BeginDisabled();
-    }
-
     if (ImGui::InputText(std::string("##path_" + property).c_str(), &pathBuffer[0], IM_ARRAYSIZE(pathBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        _gui.UIConfiguration()->setString(property, std::string(pathBuffer));
+        _gui.UserConfiguration()->setString(property, std::string(pathBuffer));
     }
 
     ImGui::SameLine();
@@ -170,14 +164,11 @@ void SettingsWindow::PathSetting(const std::string& property)
     }
     ImGui::PopID();
 
-    if (isOverridden)
+    ResetButton(property);
+
+    if (_gui.CommandLineConfiguration()->has(property))
     {
-        ImGui::EndDisabled();
         OverriddenSettingMarker();
-    }
-    else
-    {
-        ResetButton(property);
     }
 }
 
@@ -186,28 +177,18 @@ void SettingsWindow::BooleanSetting(const std::string& property, bool defaultVal
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto value = Poco::Util::Application::instance().config().getBool(property, defaultValue);
-
-    bool isOverridden{false};
-    if (_gui.CommandLineConfiguration()->has(property))
-    {
-        isOverridden = true;
-        ImGui::BeginDisabled();
-    }
+    auto value = _gui.UserConfiguration()->getBool(property, defaultValue);
 
     if (ImGui::Checkbox(std::string("##boolean_" + property).c_str(), &value))
     {
-        _gui.UIConfiguration()->setBool(property, value);
+        _gui.UserConfiguration()->setBool(property, value);
     }
 
-    if (isOverridden)
+    ResetButton(property);
+
+    if (_gui.CommandLineConfiguration()->has(property))
     {
-        ImGui::EndDisabled();
         OverriddenSettingMarker();
-    }
-    else
-    {
-        ResetButton(property);
     }
 }
 
@@ -215,28 +196,18 @@ void SettingsWindow::IntegerSetting(const std::string& property, int defaultValu
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto value = Poco::Util::Application::instance().config().getInt(property, defaultValue);
-
-    bool isOverridden{false};
-    if (_gui.CommandLineConfiguration()->has(property))
-    {
-        isOverridden = true;
-        ImGui::BeginDisabled();
-    }
+    auto value = _gui.UserConfiguration()->getInt(property, defaultValue);
 
     if (ImGui::SliderInt(std::string("##integer_" + property).c_str(), &value, min, max))
     {
-        _gui.UIConfiguration()->setInt(property, value);
+        _gui.UserConfiguration()->setInt(property, value);
     }
 
-    if (isOverridden)
+    ResetButton(property);
+
+    if (_gui.CommandLineConfiguration()->has(property))
     {
-        ImGui::EndDisabled();
         OverriddenSettingMarker();
-    }
-    else
-    {
-        ResetButton(property);
     }
 }
 
@@ -245,65 +216,46 @@ void SettingsWindow::IntegerSettingVec(const std::string& property1, const std::
     ImGui::TableSetColumnIndex(1);
 
     int values[2] = {
-        Poco::Util::Application::instance().config().getInt(property1, defaultValue1),
-        Poco::Util::Application::instance().config().getInt(property2, defaultValue2)};
-
-    bool isOverridden{false};
-    if (_gui.CommandLineConfiguration()->has(property1) || _gui.CommandLineConfiguration()->has(property2))
-    {
-        isOverridden = true;
-        ImGui::BeginDisabled();
-    }
+        _gui.UserConfiguration()->getInt(property1, defaultValue1),
+        _gui.UserConfiguration()->getInt(property2, defaultValue2)};
 
     if (ImGui::SliderInt2(std::string("##integer_" + property1 + property2).c_str(), values, min, max))
     {
-        _gui.UIConfiguration()->setInt(property1, values[0]);
-        _gui.UIConfiguration()->setInt(property2, values[1]);
+        _gui.UserConfiguration()->setInt(property1, values[0]);
+        _gui.UserConfiguration()->setInt(property2, values[1]);
     }
 
-    if (isOverridden)
+    ResetButton(property1, property2);
+
+    if (_gui.CommandLineConfiguration()->has(property1) || _gui.CommandLineConfiguration()->has(property2))
     {
-        ImGui::EndDisabled();
         OverriddenSettingMarker();
     }
-    else
-    {
-        ResetButton(property1, property2);
-    }
+
 }
 
 void SettingsWindow::DoubleSetting(const std::string& property, double defaultValue, double min, double max)
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto value = static_cast<float>(Poco::Util::Application::instance().config().getDouble(property, defaultValue));
-
-    bool isOverridden{false};
-    if (_gui.CommandLineConfiguration()->has(property))
-    {
-        isOverridden = true;
-        ImGui::BeginDisabled();
-    }
+    auto value = static_cast<float>(_gui.UserConfiguration()->getDouble(property, defaultValue));
 
     if (ImGui::SliderFloat(std::string("##double_" + property).c_str(), &value, static_cast<float>(min), static_cast<float>(max)))
     {
-        _gui.UIConfiguration()->setDouble(property, value);
+        _gui.UserConfiguration()->setDouble(property, value);
     }
 
-    if (isOverridden)
+    ResetButton(property);
+
+    if (_gui.CommandLineConfiguration()->has(property))
     {
-        ImGui::EndDisabled();
         OverriddenSettingMarker();
-    }
-    else
-    {
-        ResetButton(property);
     }
 }
 
 void SettingsWindow::ResetButton(const std::string& property1, const std::string& property2)
 {
-    if (!_gui.UIConfiguration()->has(property1) && (property2.empty() || !_gui.UIConfiguration()->has(property2)))
+    if (!_gui.UserConfiguration()->has(property1) && (property2.empty() || !_gui.UserConfiguration()->has(property2)))
     {
         return;
     }
@@ -313,10 +265,10 @@ void SettingsWindow::ResetButton(const std::string& property1, const std::string
     ImGui::PushID(std::string(property1 + property2 + "_ResetButton").c_str());
     if (ImGui::Button("Reset"))
     {
-        _gui.UIConfiguration()->remove(property1);
+        _gui.UserConfiguration()->remove(property1);
         if (!property2.empty())
         {
-            _gui.UIConfiguration()->remove(property2);
+            _gui.UserConfiguration()->remove(property2);
         }
     }
     ImGui::PopID();
@@ -324,14 +276,14 @@ void SettingsWindow::ResetButton(const std::string& property1, const std::string
 
 void SettingsWindow::OverriddenSettingMarker()
 {
-    ImGui::TableSetColumnIndex(2);
+    ImGui::TableSetColumnIndex(3);
 
-    ImGui::TextColored(ImVec4(1, 0, 0, 1), "[Locked]");
+    ImGui::TextColored(ImVec4(1, 0, 0, 1), "[!]");
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
         ImGui::TextUnformatted("Value set via command line argument.");
-        ImGui::TextUnformatted("Can only be changed if not overridden.");
+        ImGui::TextUnformatted("It will only be used if not overridden.");
         ImGui::EndTooltip();
     }
 }

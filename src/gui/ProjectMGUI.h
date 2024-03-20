@@ -30,16 +30,16 @@ public:
     void uninitialize() override;
 
     /**
-     * @brief Sets the UI configuration file.
-     * @param config The properties file instance which stores the UI settings.
+     * @brief Sets the current user's configuration file.
+     * @param config The properties file instance which stores the settings for the current user.
      */
-    void UIConfiguration(Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config);
+    void UserConfiguration(Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config);
 
     /**
-     * @brief Returns the UI configuration file.
-     * @return The properties file instance which stores the UI settings.
+     * @brief Returns the user configuration file.
+     * @return The properties file instance which stores the settings for the current user.
      */
-    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> UIConfiguration();
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> UserConfiguration();
 
     /**
      * @brief Sets the command line override map.
@@ -129,7 +129,7 @@ private:
 
     ProjectMWrapper* _projectMWrapper{nullptr};
 
-    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> _uiConfig; //!< The UI configuration, used to store/reset changes made in the UI's settings dialog.
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> _userConfiguration; //!< The current user's configuration, used to store/reset changes made in the UI's settings dialog.
     Poco::AutoPtr<Poco::Util::MapConfiguration> _commandLineOverrides; //!< The command-line override settings.
 
     Poco::NObserver<ProjectMGUI, DisplayToastNotification> _displayToastNotificationObserver{*this, &ProjectMGUI::DisplayToastNotificationHandler};

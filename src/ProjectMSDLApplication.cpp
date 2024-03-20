@@ -45,7 +45,7 @@ void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
 
     try
     {
-        //if (loadConfiguration(PRIO_DEFAULT) == 0)
+        if (loadConfiguration(PRIO_DEFAULT) == 0)
         {
             // The file may be located in the ../Resources bundle dir on macOS, elsewhere relative
             // to the executable or within an absolute path.
@@ -75,27 +75,24 @@ void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
         // Try to load user's custom configuration file.
         Poco::Path userConfigurationFile = userConfigurationDir;
         userConfigurationFile.setFileName(configFileName);
-        if (Poco::File(userConfigurationFile).exists())
-        {
-            loadConfiguration(userConfigurationFile.toString(), PRIO_DEFAULT - 10);
-        }
-
-        // Lastly, load user's UI configuration file into a separate instance.
-        // This is used to save any config changes made via the UI, so it can be reset independently.
-        userConfigurationFile.setFileName(config().getString("application.baseName") + "_UI.properties");
         if (!Poco::File(userConfigurationFile).exists())
         {
             Poco::File(userConfigurationDir).createDirectories();
             Poco::File(userConfigurationFile).createFile();
         }
-        Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> uiConfiguration = new Poco::Util::PropertyFileConfiguration(userConfigurationFile.toString());
-        config().add(uiConfiguration, PRIO_DEFAULT - 20);
-        getSubsystem<ProjectMGUI>().UIConfiguration(uiConfiguration);
+        Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> userConfiguration = new Poco::Util::PropertyFileConfiguration(userConfigurationFile.toString());
+        config().add(userConfiguration, PRIO_DEFAULT - 10);
+
+        // Pass the config data to the UI
+        getSubsystem<ProjectMGUI>().UserConfiguration(userConfiguration);
     }
     catch (Poco::Exception& ex)
     {
         poco_error_f1(logger(), "Failed to load/create user configuration file: %s", ex.displayText());
     }
+
+    // Add another layer on top for temporary command-line parameter overrides
+    config().add(new Poco::Util::MapConfiguration(), PRIO_DEFAULT - 30);
 
     Application::initialize(self);
 }

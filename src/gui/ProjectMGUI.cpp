@@ -61,14 +61,14 @@ void ProjectMGUI::uninitialize()
     _glContext = nullptr;
 }
 
-void ProjectMGUI::UIConfiguration(Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config)
+void ProjectMGUI::UserConfiguration(Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config)
 {
-    _uiConfig = config;
+    _userConfiguration = std::move(config);
 }
 
-Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> ProjectMGUI::UIConfiguration()
+Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> ProjectMGUI::UserConfiguration()
 {
-    return _uiConfig;
+    return _userConfiguration;
 }
 
 void ProjectMGUI::CommandLineConfiguration(Poco::AutoPtr<Poco::Util::MapConfiguration> config)
