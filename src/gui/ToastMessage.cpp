@@ -36,6 +36,11 @@ bool ToastMessage::Draw(float lastFrameTime)
         _gui.PushToastFont();
         ImGui::Text("%s", _toastText.c_str());
         _gui.PopFont();
+        if (!_broughtToFront)
+        {
+            ImGui::SetWindowFocus();
+            _broughtToFront = true;
+        }
     }
     ImGui::End();
 

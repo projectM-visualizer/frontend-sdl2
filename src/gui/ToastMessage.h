@@ -24,5 +24,6 @@ private:
 
     std::string _toastText; //!< The toast message text to be displayed.
     float _displayTimeLeft{3.0f}; //!< Remaining toast message display time in seconds.
+    bool _broughtToFront{false}; //!< true if the toast window was already made topmost once.
 
 };
