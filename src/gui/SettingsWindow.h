@@ -7,6 +7,7 @@
 
 #include <string>
 
+class AudioCapture;
 class ProjectMGUI;
 
 class SettingsWindow
@@ -79,6 +80,16 @@ private:
     void DoubleSetting(const std::string& property, double defaultValue, double min, double max);
 
     /**
+     * @brief Displays a checkbox to override the window startup position, and if this is selected, displays two sliders.
+     */
+    void WindowPositionSetting();
+
+    /**
+     * @brief Displays a combobox with available audio devices.
+     */
+    void AudioDeviceSetting();
+
+    /**
      * @brief Displays a reset button and removes the property from the UI map if clicked.
      * @param property1 First property to reset.
      * @param property2 Optional second property to reset.
@@ -91,11 +102,13 @@ private:
     void OverriddenSettingMarker();
 
     ProjectMGUI& _gui; //!< The GUI subsystem.
+    AudioCapture& _audioCapture; //!< The audio capture subsystem.
+
     bool _visible{false}; //!< Window visibility flag.
     bool _changed{false}; //!< true if the user changed any setting since the last save.
 
     Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> _userConfiguration;
     Poco::AutoPtr<Poco::Util::MapConfiguration> _commandLineConfiguration;
 
-    FileChooser _pathChooser{ FileChooser::Mode::Directory }; //!< The file chooser dialog to select preset and texture paths.
+    FileChooser _pathChooser{FileChooser::Mode::Directory}; //!< The file chooser dialog to select preset and texture paths.
 };

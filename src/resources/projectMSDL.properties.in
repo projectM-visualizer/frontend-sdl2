@@ -3,6 +3,10 @@
 # If set to true, the application will start in fullscreen mode
 window.fullscreen = false
 
+# If set to true, the application windows will have no window decorations if the OS supports it.
+# This will possibly make the window immovable.
+window.borderless = false
+
 # Set the monitor to initially display the window on.
 # 0 will use system defaults for placement, 1 and above select a specific monitor.
 # If the number is too large, that last available monitor is used.
@@ -24,9 +28,21 @@ window.fullscreen.height = 0
 window.width = 1024
 window.height = 768
 
+# Override system default window position
+window.overridePosition = false
+
+# If overridePosition is true, the window will be placed at these coordinates.
+# Note this will include any window decoration, to the actual window contents might be offset to the bottom-right.
+window.left = 0
+window.top = 0
+
 # Wait for vertical sync interval before displaying the next frame.
-# This will limit max FPS to the vertical sync frequency but prevent tearing.
+# This will limit max FPS to the vertical sync frequency but prevents tearing.
 window.waitForVerticalSync = true
+
+# Tries to use adaptive vertical sync if waitForVerticalSync is enabled.
+# When using a monitor capable of adaptive sync, setting projectM.fps to 0 gives the best results.
+window.adaptiveVerticalSync = true
 
 # If true, displays the current preset name (and locked state) in the window title.
 # If false, the window title is fixed to "projectM".

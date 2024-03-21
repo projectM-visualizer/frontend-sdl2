@@ -23,7 +23,6 @@ RenderLoop::RenderLoop()
 void RenderLoop::Run()
 {
     FPSLimiter limiter;
-    limiter.TargetFPS(_projectMWrapper.TargetFPS());
 
     auto& notificationCenter{Poco::NotificationCenter::defaultCenter()};
 
@@ -33,6 +32,7 @@ void RenderLoop::Run()
 
     while (!_wantsToQuit)
     {
+        limiter.TargetFPS(_projectMWrapper.TargetFPS());
         limiter.StartFrame();
 
         PollEvents();
@@ -44,6 +44,9 @@ void RenderLoop::Run()
         _sdlRenderingWindow.Swap();
 
         limiter.EndFrame();
+
+        // Pass projectM the actual FPS value of the last frame.
+        _projectMWrapper.UpdateRealFPS(limiter.FPS());
     }
 
     notificationCenter.removeObserver(_quitNotificationObserver);

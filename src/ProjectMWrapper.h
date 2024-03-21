@@ -39,7 +39,17 @@ public:
      */
     void RenderFrame() const;
 
+    /**
+     * @brief Returns the targeted FPS value.
+     * @return The user-configured target FPS. Can be 0, which means unlimited.
+     */
     int TargetFPS();
+
+    /**
+     * @brief Updates projectM with the current, actual FPS value.
+     * @param fps The current FPS value.
+     */
+    void UpdateRealFPS(float fps);
 
     /**
      * @brief If splash is disabled, shows the initial preset.

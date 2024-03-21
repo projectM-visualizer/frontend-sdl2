@@ -71,6 +71,27 @@ public:
      */
     void NextDisplay();
 
+    /**
+     * @brief Returns the ID of the current display the window is shown on.
+     * @return
+     */
+    int GetCurrentDisplay();
+
+    /**
+     * @brief Returns the dimensions of the window.
+     * @param [out] width The width of the window.
+     * @param [out] height The height of the window.
+     */
+    void GetWindowSize(int& width, int& height);
+
+    /**
+     * @brief Returns the position of the window.
+     * @param [out] left The left position of the window.
+     * @param [out] top Top top position of the window.
+     * @param [in] relative If true, returns the position relative to the current display.
+     */
+    void GetWindowPosition(int& left, int& top, bool relative = false);
+
     SDL_Window* GetRenderingWindow() const;
 
     SDL_GLContext GetGlContext() const;
@@ -93,11 +114,34 @@ protected:
     void DumpOpenGLInfo();
 
     /**
-     * @brief Updates the window title.
+     * @brief Receives notifications requesting an update of the window title.
      * @param notification The update notification.
      */
     void UpdateWindowTitleNotificationHandler(const Poco::AutoPtr<UpdateWindowTitleNotification>& notification);
 
+    /**
+     * @brief Updates the window title.
+     */
+    void UpdateWindowTitle();
+
+    /**
+     * @brief Updates the swap interval from the user settings.
+     */
+    void UpdateSwapInterval();
+
+    /**
+     * @brief Event callback if a configuration value has changed.
+     * @param property The key and value that has been changed.
+     */
+    void OnConfigurationPropertyChanged(const Poco::Util::AbstractConfiguration::KeyValue& property);
+
+    /**
+     * @brief Event callback if a configuration value has been removed.
+     * @param key The key of the removed property.
+     */
+    void OnConfigurationPropertyRemoved(const std::string& key);
+
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _userConfig; //!< View of the "projectM" configuration subkey in the "user" configuration.
     Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "window" configuration subkey.
 
     SDL_Window* _renderingWindow{ nullptr }; //!< Pointer to the SDL window used for rendering.

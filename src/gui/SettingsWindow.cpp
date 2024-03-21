@@ -1,6 +1,8 @@
 #include "SettingsWindow.h"
 
+#include "AudioCapture.h"
 #include "ProjectMSDLApplication.h"
+#include "SDLRenderingWindow.h"
 
 #include "ProjectMGUI.h"
 
@@ -10,8 +12,11 @@
 
 #include <Poco/NotificationCenter.h>
 
+#include <Poco/Util/Application.h>
+
 SettingsWindow::SettingsWindow(ProjectMGUI& gui)
     : _gui(gui)
+    , _audioCapture(ProjectMSDLApplication::instance().getSubsystem<AudioCapture>())
     , _userConfiguration(ProjectMSDLApplication::instance().UserConfiguration())
     , _commandLineConfiguration(ProjectMSDLApplication::instance().CommandLineConfiguration())
 {
@@ -80,6 +85,10 @@ void SettingsWindow::Draw()
                     DoubleSetting("projectM.displayDuration", 30.0, 1.0, 240.0);
 
                     ImGui::TableNextRow();
+                    LabelWithTooltip("Preset Transition Duration", "Time in seconds it takes to transition softly from one preset to another.");
+                    DoubleSetting("projectM.transitionDuration", 3.0, .0, 10.0);
+
+                    ImGui::TableNextRow();
                     LabelWithTooltip("Enable Hard Cuts", "Enables beat-driven, fast preset changes.\nSensitivity and earliest switch time can be configured separately.");
                     BooleanSetting("projectM.hardCutsEnabled", false);
 
@@ -103,12 +112,111 @@ void SettingsWindow::Draw()
                 }
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Window"))
+            if (ImGui::BeginTabItem("Window / Rendering"))
             {
+                if (ImGui::BeginTable("projectM", 5, tableFlags))
+                {
+                    ImGui::TableSetupColumn("##desc", ImGuiTableColumnFlags_WidthFixed, .0f);
+                    ImGui::TableSetupColumn("##setting", ImGuiTableColumnFlags_WidthStretch, .0f);
+                    ImGui::TableSetupColumn("##choose", ImGuiTableColumnFlags_WidthFixed, 50.0f);
+                    ImGui::TableSetupColumn("##reset", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+                    ImGui::TableSetupColumn("##override", ImGuiTableColumnFlags_WidthFixed, .0f);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Startup Window Placement", "Initial window placement options when starting projectM.\nClick the button to copy the current window size, position and display to the settings.");
+                    ImGui::TableSetColumnIndex(1);
+                    if (ImGui::Button("Use Current Size and Position"))
+                    {
+                        auto& renderingWindow = Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>();
+                        int x;
+                        int y;
+
+                        renderingWindow.GetWindowSize(x, y);
+                        _userConfiguration->setInt("window.width", x);
+                        _userConfiguration->setInt("window.height", y);
+
+                        renderingWindow.GetWindowPosition(x, y, true);
+                        _userConfiguration->setInt("window.left", x);
+                        _userConfiguration->setInt("window.top", y);
+
+                        _userConfiguration->setBool("window.overridePosition", true);
+                        _userConfiguration->setInt("window.monitor", renderingWindow.GetCurrentDisplay() + 1);
+                    }
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("  Window Size", "Initial window size when starting projectM.\nThis might or might not include the window decoration, depending on the OS.");
+                    IntegerSettingVec("window.width", "window.height", 1920, 1080, 32, 8192);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("  Window Position", "Initial window position when starting projectM.\nThe coordinates are relative to the current monitor.");
+                    WindowPositionSetting();
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("  Monitor", "Use 0 to let the OS select the monitor, or any positive number to select a specific monitor.\nIf the number is larger than the number of connected monitors, the last available one will be used.");
+                    IntegerSetting("window.monitor", 0, 0, 10);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Borderless Window", "Don't display the window border and title bar if the OS supports it.\nCan make the window immovable.");
+                    BooleanSetting("window.borderless", false);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Start Fullscreen", "Start projectM in fullscreen mode");
+                    BooleanSetting("window.fullscreen", false);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("  Exclusive Fullscreen Mode", "Use exclusive mode if fullscreen, e.g. not as a borderless window.\nThis can improve performance, but may switch the desktop resolution!");
+                    BooleanSetting("window.fullscreen.exclusive", false);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("  Exclusive Mode Resolution", "Resolution to change to in exclusive fullscreen mode.\nNot all graphics driver support arbitrary resolution and will use the next-best supported one.");
+                    IntegerSettingVec("fullscreen.width", "fullscreen.height", 1920, 1080, 240, 8192);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Target FPS", "Limit frames rendered per second to the given FPS value.\nNOTE: A value of 0 will NOT limit FPS and render at either VSync or unlimited pace, possibly using all CPU/GPU resources.");
+                    IntegerSetting("projectM.fps", 60, 0, 300);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Wait for Vertical Sync", "Wait for vertical sync interval before displaying the next frame.\nThis will limit max FPS to the vertical sync frequency but prevents tearing.");
+                    BooleanSetting("window.waitForVerticalSync", false);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("  Use Adaptive Sync", "Tries to use adaptive vertical sync if vertical sync is enabled.\nWhen using a monitor capable of adaptive sync, setting FPS to 0 gives the best results.");
+                    BooleanSetting("window.adaptiveVerticalSync", false);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Preset Name in Title", "Controls displaying the current preset name after the application name in the window title.");
+                    BooleanSetting("window.displayPresetNameInTitle", true);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Display Toast Messages", "Controls displaying toast messages/notifications, e.g. when changing the audio device.");
+                    BooleanSetting("projectM.displayToasts", true);
+
+                    ImGui::EndTable();
+                }
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Audio"))
             {
+                if (ImGui::BeginTable("projectM", 5, tableFlags))
+                {
+                    ImGui::TableSetupColumn("##desc", ImGuiTableColumnFlags_WidthFixed, .0f);
+                    ImGui::TableSetupColumn("##setting", ImGuiTableColumnFlags_WidthStretch, .0f);
+                    ImGui::TableSetupColumn("##choose", ImGuiTableColumnFlags_WidthFixed, 50.0f);
+                    ImGui::TableSetupColumn("##reset", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+                    ImGui::TableSetupColumn("##override", ImGuiTableColumnFlags_WidthFixed, .0f);
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Audio Capturing Device", "The device to capture audio from.");
+                    AudioDeviceSetting();
+
+                    ImGui::TableNextRow();
+                    LabelWithTooltip("Beat Sensitivity", "Beat detection multiplier.");
+                    DoubleSetting("projectM.beatSensitivity", 1.0, 0.0, 2.0);
+
+                    ImGui::EndTable();
+                }
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Help"))
@@ -122,7 +230,7 @@ void SettingsWindow::Draw()
                 ImGui::Bullet();
                 ImGui::TextWrapped("%s", "Settings overridden by command-line parameters cannot be changed.");
                 ImGui::Bullet();
-                ImGui::TextWrapped("All values changed/set in this window are stored in a separate configuration file, projectMSDL_UI.properties, in the user configuration directory \"%s\"",
+                ImGui::TextWrapped("All values changed/set in this window are stored in the configuration file, projectMSDL.properties, in the user configuration directory \"%s\"",
                                    userConfigurationDir.toString().c_str());
 
                 ImGui::Separator();
@@ -131,7 +239,7 @@ void SettingsWindow::Draw()
                 ImGui::Bullet();
                 ImGui::TextWrapped("%s", "Hold down control/command key when clicking on sliders to enter a custom value. The manually entered value can be outside the slider's value range.");
                 ImGui::Bullet();
-                ImGui::TextWrapped("%s", "Click on \"Reset\" to unset the value and use the value from the user or application default configuration file (projectMSDL.properties).");
+                ImGui::TextWrapped("%s", "Click on \"Reset\" to unset a value and use the default value from the application's factory configuration file.");
 
                 ImGui::EndTabItem();
             }
@@ -308,6 +416,86 @@ void SettingsWindow::DoubleSetting(const std::string& property, double defaultVa
     }
 }
 
+void SettingsWindow::WindowPositionSetting()
+{
+    ImGui::TableSetColumnIndex(1);
+
+    bool positionIsOverridden = _userConfiguration->getBool("window.overridePosition", false);
+
+    if (ImGui::Checkbox("##window_set_pos", &positionIsOverridden))
+    {
+        _userConfiguration->setBool("window.overridePosition", positionIsOverridden);
+    }
+
+    if (positionIsOverridden)
+    {
+        ImGui::SameLine();
+
+        int values[2] = {
+            _userConfiguration->getInt("window.left", 0),
+            _userConfiguration->getInt("window.top", 0)};
+
+        if (ImGui::SliderInt2("##window_pos", values, -8192, 8192))
+        {
+            _userConfiguration->setInt("window.left", values[0]);
+            _userConfiguration->setInt("window.top", values[1]);
+            _changed = true;
+        }
+    }
+
+    ResetButton("window.overridePosition");
+
+    if (_commandLineConfiguration->has("window.left") || _commandLineConfiguration->has("window.top"))
+    {
+        OverriddenSettingMarker();
+    }
+}
+
+void SettingsWindow::AudioDeviceSetting()
+{
+    ImGui::TableSetColumnIndex(1);
+
+    auto devices = _audioCapture.AudioDeviceList();
+    auto currentIndex = _audioCapture.AudioDeviceIndex();
+
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::BeginCombo("##audiodevice", devices.at(currentIndex).c_str(), 0))
+    {
+        for (const auto& device : devices)
+        {
+            bool isSelected = device.first == currentIndex;
+
+            if (ImGui::Selectable(device.second.c_str(), "", isSelected))
+            {
+                _audioCapture.AudioDeviceIndex(device.first);
+                if (device.first == -1)
+                {
+                    _userConfiguration->setInt("audio.device", -1);
+                }
+                else
+                {
+                    _userConfiguration->setString("audio.device", device.second);
+                }
+                _changed = true;
+            }
+
+            if (isSelected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    ResetButton("audio.device");
+
+    if (_commandLineConfiguration->has("audio.device"))
+    {
+        OverriddenSettingMarker();
+    }
+}
+
 void SettingsWindow::ResetButton(const std::string& property1, const std::string& property2)
 {
     if (!_userConfiguration->has(property1) && (property2.empty() || !_userConfiguration->has(property2)))
@@ -338,8 +526,8 @@ void SettingsWindow::OverriddenSettingMarker()
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::TextUnformatted("Value set via command line argument.");
-        ImGui::TextUnformatted("It will only be used if not overridden.");
+        ImGui::TextUnformatted("Value passed as command line argument.");
+        ImGui::TextUnformatted("The value configured here will only be used if NOT overridden via the command line.");
         ImGui::EndTooltip();
     }
 }

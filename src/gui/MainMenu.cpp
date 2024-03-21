@@ -1,7 +1,8 @@
 #include "gui/MainMenu.h"
 
-#include "ProjectMWrapper.h"
 #include "AudioCapture.h"
+#include "ProjectMSDLApplication.h"
+#include "ProjectMWrapper.h"
 
 #include "gui/ProjectMGUI.h"
 #include "gui/SystemBrowser.h"
@@ -14,7 +15,6 @@
 
 #include <Poco/NotificationCenter.h>
 
-#include <Poco/Util/Application.h>
 
 MainMenu::MainMenu(ProjectMGUI& gui)
     : _notificationCenter(Poco::NotificationCenter::defaultCenter())
@@ -59,7 +59,7 @@ void MainMenu::Draw()
 
         if (ImGui::BeginMenu("Playback"))
         {
-            auto& app = Poco::Util::Application::instance();
+            auto& app = ProjectMSDLApplication::instance();
 
             if (ImGui::MenuItem("Play Next Preset", "n"))
             {
@@ -94,7 +94,7 @@ void MainMenu::Draw()
 
         if (ImGui::BeginMenu("Options"))
         {
-            auto& app = Poco::Util::Application::instance();
+            auto& app = ProjectMSDLApplication::instance();
 
             if (ImGui::BeginMenu("Audio Capture Device"))
             {
@@ -115,11 +115,11 @@ void MainMenu::Draw()
 
             if (ImGui::MenuItem("Display Toast Messages", "", app.config().getBool("projectM.displayToasts", true)))
             {
-                app.config().setBool("projectM.displayToasts", !app.config().getBool("projectM.displayToasts", true));
+                app.UserConfiguration()->setBool("projectM.displayToasts", !app.config().getBool("projectM.displayToasts", true));
             }
             if (ImGui::MenuItem("Display Preset Name in Window Title", "", app.config().getBool("window.displayPresetNameInTitle", true)))
             {
-                app.config().setBool("window.displayPresetNameInTitle", !app.config().getBool("window.displayPresetNameInTitle", true));
+                app.UserConfiguration()->setBool("window.displayPresetNameInTitle", !app.config().getBool("window.displayPresetNameInTitle", true));
                 _notificationCenter.postNotification(new UpdateWindowTitleNotification);
             }
 
@@ -129,6 +129,7 @@ void MainMenu::Draw()
             if (ImGui::SliderFloat("Beat Sensitivity", &beatSensitivity, 0.0f, 2.0f))
             {
                 projectm_set_beat_sensitivity(_projectMWrapper.ProjectM(), beatSensitivity);
+                app.UserConfiguration()->setDouble("projectM.beatSensitivity", beatSensitivity);
             }
 
             ImGui::EndMenu();

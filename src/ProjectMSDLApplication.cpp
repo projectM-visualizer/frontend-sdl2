@@ -165,6 +165,11 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
                              false, "<0/1>", true)
                           .binding("window.waitForVerticalSync", _commandLineOverrides));
 
+    options.addOption(Option("vsyncAdaptive", "",
+                             "If true and vsync is enabled, tries to use adaptive vsync. Set FPS to 0 for best results.",
+                             false, "<0/1>", true)
+                          .binding("window.adaptiveVerticalSync", _commandLineOverrides));
+
     options.addOption(Option("width", "", "Initial window width.",
                              false, "<number>", true)
                           .binding("window.width", _commandLineOverrides));

@@ -47,6 +47,10 @@ void ProjectMGUI::initialize(Poco::Util::Application& app)
 
     UpdateFontSize();
 
+    // Set a sensible minimum window size to prevent layout assertions
+    auto& style = ImGui::GetStyle();
+    style.WindowMinSize = {128, 128};
+
     Poco::NotificationCenter::defaultCenter().addObserver(_displayToastNotificationObserver);
 }
 
