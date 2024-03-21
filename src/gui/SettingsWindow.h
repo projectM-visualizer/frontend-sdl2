@@ -2,6 +2,9 @@
 
 #include "FileChooser.h"
 
+#include <Poco/Util/MapConfiguration.h>
+#include <Poco/Util/PropertyFileConfiguration.h>
+
 #include <string>
 
 class ProjectMGUI;
@@ -88,7 +91,11 @@ private:
     void OverriddenSettingMarker();
 
     ProjectMGUI& _gui; //!< The GUI subsystem.
-    bool _visible{false}; //!< window visibility flag.
+    bool _visible{false}; //!< Window visibility flag.
+    bool _changed{false}; //!< true if the user changed any setting since the last save.
+
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> _userConfiguration;
+    Poco::AutoPtr<Poco::Util::MapConfiguration> _commandLineConfiguration;
 
     FileChooser _pathChooser{ FileChooser::Mode::Directory }; //!< The file chooser dialog to select preset and texture paths.
 };

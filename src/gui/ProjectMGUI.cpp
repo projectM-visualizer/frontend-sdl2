@@ -63,26 +63,6 @@ void ProjectMGUI::uninitialize()
     _glContext = nullptr;
 }
 
-void ProjectMGUI::UserConfiguration(Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config)
-{
-    _userConfiguration = std::move(config);
-}
-
-Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> ProjectMGUI::UserConfiguration()
-{
-    return _userConfiguration;
-}
-
-void ProjectMGUI::CommandLineConfiguration(Poco::AutoPtr<Poco::Util::MapConfiguration> config)
-{
-    _commandLineOverrides = std::move(config);
-}
-
-Poco::AutoPtr<Poco::Util::MapConfiguration> ProjectMGUI::CommandLineConfiguration()
-{
-    return _commandLineOverrides;
-}
-
 void ProjectMGUI::UpdateFontSize()
 {
     ImGuiIO& io = ImGui::GetIO();

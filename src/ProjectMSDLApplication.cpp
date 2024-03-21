@@ -14,6 +14,7 @@
 #include <Poco/File.h>
 
 #include <Poco/Util/HelpFormatter.h>
+#include <Poco/Util/PropertyFileConfiguration.h>
 
 #include <iostream>
 
@@ -32,12 +33,26 @@ const char* ProjectMSDLApplication::name() const
     return "projectMSDL";
 }
 
+ProjectMSDLApplication& ProjectMSDLApplication::instance()
+{
+    return dynamic_cast<ProjectMSDLApplication&>(Poco::Util::Application::instance());
+}
+
+Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> ProjectMSDLApplication::UserConfiguration()
+{
+    return _userConfiguration;
+}
+
+Poco::AutoPtr<Poco::Util::MapConfiguration> ProjectMSDLApplication::CommandLineConfiguration()
+{
+    return _commandLineOverrides;
+}
+
 void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
 {
     // Application settings are PRIO_APPLICATION, higher values have lower precedence.
     // So we put command-line overrides just below settings changed in the UI.
     config().add(_commandLineOverrides, PRIO_APPLICATION + 10);
-    getSubsystem<ProjectMGUI>().CommandLineConfiguration(_commandLineOverrides);
 
     std::string configFileName = config().getString("application.baseName") + ".properties";
     Poco::Path userConfigurationDir = Poco::Path::configHome();
@@ -70,29 +85,26 @@ void ProjectMSDLApplication::initialize(Poco::Util::Application& self)
         poco_error_f1(logger(), "Failed to load default configuration file: %s", ex.displayText());
     }
 
+    // Try to load user's custom configuration file.
+    Poco::Path userConfigurationFile = userConfigurationDir;
+    userConfigurationFile.setFileName(configFileName);
     try
     {
-        // Try to load user's custom configuration file.
-        Poco::Path userConfigurationFile = userConfigurationDir;
-        userConfigurationFile.setFileName(configFileName);
         if (!Poco::File(userConfigurationFile).exists())
         {
             Poco::File(userConfigurationDir).createDirectories();
             Poco::File(userConfigurationFile).createFile();
         }
-        Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> userConfiguration = new Poco::Util::PropertyFileConfiguration(userConfigurationFile.toString());
-        config().add(userConfiguration, PRIO_DEFAULT - 10);
+        _userConfiguration->load(userConfigurationFile.toString());
+        config().add(_userConfiguration, PRIO_DEFAULT - 10);
 
-        // Pass the config data to the UI
-        getSubsystem<ProjectMGUI>().UserConfiguration(userConfiguration);
+        // Store the configuration file path
+        _commandLineOverrides->setString("app.UserConfigurationFile", userConfigurationFile.toString());
     }
     catch (Poco::Exception& ex)
     {
         poco_error_f1(logger(), "Failed to load/create user configuration file: %s", ex.displayText());
     }
-
-    // Add another layer on top for temporary command-line parameter overrides
-    config().add(new Poco::Util::MapConfiguration(), PRIO_DEFAULT - 30);
 
     Application::initialize(self);
 }
@@ -256,3 +268,4 @@ void ProjectMSDLApplication::ListAudioDevices(POCO_UNUSED const std::string& nam
 {
     _commandLineOverrides->setBool("audio.listDevices", true);
 }
+

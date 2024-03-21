@@ -66,7 +66,20 @@ private:
 
     std::vector<std::string> GetPathListWithDefault(const std::string& baseKey, const std::string& defaultPath);
 
-    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _config; //!< View of the "projectM" configuration subkey.
+    /**
+     * @brief Event callback if a configuration value has changed.
+     * @param property The key and value that has been changed.
+     */
+    void OnConfigurationPropertyChanged(const Poco::Util::AbstractConfiguration::KeyValue& property);
+
+    /**
+     * @brief Event callback if a configuration value has been removed.
+     * @param key The key of the removed property.
+     */
+    void OnConfigurationPropertyRemoved(const std::string& key);
+
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _userConfig; //!< View of the "projectM" configuration subkey in the "user" configuration.
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> _projectMConfigView; //!< View of the "projectM" configuration subkey in the "effective" configuration.
 
     projectm_handle _projectM{nullptr}; //!< Pointer to the projectM instance used by the application.
     projectm_playlist_handle _playlist{nullptr}; //!< Pointer to the projectM playlist manager instance.

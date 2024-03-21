@@ -1,13 +1,19 @@
 #include "SettingsWindow.h"
 
+#include "ProjectMSDLApplication.h"
+
 #include "ProjectMGUI.h"
 
-#include "imgui.h"
+#include "notifications/DisplayToastNotification.h"
 
-#include <Poco/Util/Application.h>
+#include <imgui.h>
+
+#include <Poco/NotificationCenter.h>
 
 SettingsWindow::SettingsWindow(ProjectMGUI& gui)
     : _gui(gui)
+    , _userConfiguration(ProjectMSDLApplication::instance().UserConfiguration())
+    , _commandLineConfiguration(ProjectMSDLApplication::instance().CommandLineConfiguration())
 {
 }
 
@@ -27,17 +33,25 @@ void SettingsWindow::Draw()
     constexpr ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
     constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_None;
 
-    if (ImGui::Begin("Settings", &_visible, windowFlags))
+    std::string windowId = "Settings";
+    if (_changed)
+    {
+        windowId.append(" [CHANGED - NOT SAVED]");
+    }
+    windowId.append("###Settings");
+
+    if (ImGui::Begin(windowId.c_str(), &_visible, windowFlags))
     {
         if (ImGui::BeginTabBar("projectM Settings", tabBarFlags))
         {
 
             if (ImGui::BeginTabItem("projectM"))
             {
-                if (ImGui::BeginTable("projectM", 4, tableFlags))
+                if (ImGui::BeginTable("projectM", 5, tableFlags))
                 {
                     ImGui::TableSetupColumn("##desc", ImGuiTableColumnFlags_WidthFixed, .0f);
                     ImGui::TableSetupColumn("##setting", ImGuiTableColumnFlags_WidthStretch, .0f);
+                    ImGui::TableSetupColumn("##choose", ImGuiTableColumnFlags_WidthFixed, 50.0f);
                     ImGui::TableSetupColumn("##reset", ImGuiTableColumnFlags_WidthFixed, 100.0f);
                     ImGui::TableSetupColumn("##override", ImGuiTableColumnFlags_WidthFixed, .0f);
 
@@ -54,7 +68,7 @@ void SettingsWindow::Draw()
                     BooleanSetting("projectM.enableSplash", false);
 
                     ImGui::TableNextRow();
-                    LabelWithTooltip("Lock Preset", "If enabled, the current preset will be shown until switched manually.");
+                    LabelWithTooltip("Lock Preset", "If enabled, presets will not be switched automatically.");
                     BooleanSetting("projectM.presetLocked", false);
 
                     ImGui::TableNextRow();
@@ -82,7 +96,7 @@ void SettingsWindow::Draw()
                     BooleanSetting("projectM.aspectCorrectionEnabled", true);
 
                     ImGui::TableNextRow();
-                    LabelWithTooltip("Per-Point Mesh Size X/Y", "Size of the per-point transformation grid.\nHigher values produce better quality, but require more CPU time to calculate.");
+                    LabelWithTooltip("Per-Point Mesh Size X/Y", "Size of the per-point transformation grid.\nHigher values produce better quality, but require exponentially more CPU time to calculate.\nMilkdrop's default is 48x32.");
                     IntegerSettingVec("projectM.meshX", "projectM.meshY", 64, 48, 8, 300);
 
                     ImGui::EndTable();
@@ -126,6 +140,28 @@ void SettingsWindow::Draw()
 
         ImGui::Separator();
 
+        if (ImGui::Button("Save Settings"))
+        {
+            try
+            {
+                auto configFile = _commandLineConfiguration->getString("app.UserConfigurationFile", "");
+                if (!configFile.empty())
+                {
+                    _userConfiguration->save(configFile);
+                    Poco::NotificationCenter::defaultCenter().postNotification(new DisplayToastNotification("Settings saved!"));
+                }
+                else
+                {
+                    Poco::NotificationCenter::defaultCenter().postNotification(new DisplayToastNotification("Error saving settings"));
+                }
+            }
+            catch (...)
+            {
+                Poco::NotificationCenter::defaultCenter().postNotification(new DisplayToastNotification("Error saving settings"));
+            }
+
+            _changed = false;
+        }
     }
     ImGui::End();
 
@@ -134,7 +170,8 @@ void SettingsWindow::Draw()
         auto& selectedDirectory = _pathChooser.SelectedFiles();
         if (!selectedDirectory.empty())
         {
-            _gui.UserConfiguration()->setString(_pathChooser.Context(), Poco::Path(selectedDirectory.at(0).path()).makeDirectory().toString());
+            _userConfiguration->setString(_pathChooser.Context(), Poco::Path(selectedDirectory.at(0).path()).makeDirectory().toString());
+            _changed = true;
         }
     }
 }
@@ -156,16 +193,18 @@ void SettingsWindow::PathSetting(const std::string& property)
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto path = _gui.UserConfiguration()->getString(property, "");
+    auto path = _userConfiguration->getString(property, "");
     char pathBuffer[2048]{};
     strncpy(pathBuffer, path.c_str(), std::min<size_t>(2047, path.size()));
 
+    ImGui::SetNextItemWidth(-1);
     if (ImGui::InputText(std::string("##path_" + property).c_str(), &pathBuffer[0], IM_ARRAYSIZE(pathBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        _gui.UserConfiguration()->setString(property, std::string(pathBuffer));
+        _userConfiguration->setString(property, std::string(pathBuffer));
+        _changed = true;
     }
 
-    ImGui::SameLine();
+    ImGui::TableSetColumnIndex(2);
 
     ImGui::PushID(std::string(property + "_ChoosePathButton").c_str());
     if (ImGui::Button("..."))
@@ -179,7 +218,7 @@ void SettingsWindow::PathSetting(const std::string& property)
 
     ResetButton(property);
 
-    if (_gui.CommandLineConfiguration()->has(property))
+    if (_commandLineConfiguration->has(property))
     {
         OverriddenSettingMarker();
     }
@@ -190,16 +229,17 @@ void SettingsWindow::BooleanSetting(const std::string& property, bool defaultVal
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto value = _gui.UserConfiguration()->getBool(property, defaultValue);
+    auto value = _userConfiguration->getBool(property, defaultValue);
 
     if (ImGui::Checkbox(std::string("##boolean_" + property).c_str(), &value))
     {
-        _gui.UserConfiguration()->setBool(property, value);
+        _userConfiguration->setBool(property, value);
+        _changed = true;
     }
 
     ResetButton(property);
 
-    if (_gui.CommandLineConfiguration()->has(property))
+    if (_commandLineConfiguration->has(property))
     {
         OverriddenSettingMarker();
     }
@@ -209,16 +249,17 @@ void SettingsWindow::IntegerSetting(const std::string& property, int defaultValu
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto value = _gui.UserConfiguration()->getInt(property, defaultValue);
+    auto value = _userConfiguration->getInt(property, defaultValue);
 
     if (ImGui::SliderInt(std::string("##integer_" + property).c_str(), &value, min, max))
     {
-        _gui.UserConfiguration()->setInt(property, value);
+        _userConfiguration->setInt(property, value);
+        _changed = true;
     }
 
     ResetButton(property);
 
-    if (_gui.CommandLineConfiguration()->has(property))
+    if (_commandLineConfiguration->has(property))
     {
         OverriddenSettingMarker();
     }
@@ -229,38 +270,39 @@ void SettingsWindow::IntegerSettingVec(const std::string& property1, const std::
     ImGui::TableSetColumnIndex(1);
 
     int values[2] = {
-        _gui.UserConfiguration()->getInt(property1, defaultValue1),
-        _gui.UserConfiguration()->getInt(property2, defaultValue2)};
+        _userConfiguration->getInt(property1, defaultValue1),
+        _userConfiguration->getInt(property2, defaultValue2)};
 
     if (ImGui::SliderInt2(std::string("##integer_" + property1 + property2).c_str(), values, min, max))
     {
-        _gui.UserConfiguration()->setInt(property1, values[0]);
-        _gui.UserConfiguration()->setInt(property2, values[1]);
+        _userConfiguration->setInt(property1, values[0]);
+        _userConfiguration->setInt(property2, values[1]);
+        _changed = true;
     }
 
     ResetButton(property1, property2);
 
-    if (_gui.CommandLineConfiguration()->has(property1) || _gui.CommandLineConfiguration()->has(property2))
+    if (_commandLineConfiguration->has(property1) || _commandLineConfiguration->has(property2))
     {
         OverriddenSettingMarker();
     }
-
 }
 
 void SettingsWindow::DoubleSetting(const std::string& property, double defaultValue, double min, double max)
 {
     ImGui::TableSetColumnIndex(1);
 
-    auto value = static_cast<float>(_gui.UserConfiguration()->getDouble(property, defaultValue));
+    auto value = static_cast<float>(_userConfiguration->getDouble(property, defaultValue));
 
     if (ImGui::SliderFloat(std::string("##double_" + property).c_str(), &value, static_cast<float>(min), static_cast<float>(max)))
     {
-        _gui.UserConfiguration()->setDouble(property, value);
+        _userConfiguration->setDouble(property, value);
+        _changed = true;
     }
 
     ResetButton(property);
 
-    if (_gui.CommandLineConfiguration()->has(property))
+    if (_commandLineConfiguration->has(property))
     {
         OverriddenSettingMarker();
     }
@@ -268,28 +310,29 @@ void SettingsWindow::DoubleSetting(const std::string& property, double defaultVa
 
 void SettingsWindow::ResetButton(const std::string& property1, const std::string& property2)
 {
-    if (!_gui.UserConfiguration()->has(property1) && (property2.empty() || !_gui.UserConfiguration()->has(property2)))
+    if (!_userConfiguration->has(property1) && (property2.empty() || !_userConfiguration->has(property2)))
     {
         return;
     }
 
-    ImGui::TableSetColumnIndex(2);
+    ImGui::TableSetColumnIndex(3);
 
     ImGui::PushID(std::string(property1 + property2 + "_ResetButton").c_str());
     if (ImGui::Button("Reset"))
     {
-        _gui.UserConfiguration()->remove(property1);
+        _userConfiguration->remove(property1);
         if (!property2.empty())
         {
-            _gui.UserConfiguration()->remove(property2);
+            _userConfiguration->remove(property2);
         }
+        _changed = true;
     }
     ImGui::PopID();
 }
 
 void SettingsWindow::OverriddenSettingMarker()
 {
-    ImGui::TableSetColumnIndex(3);
+    ImGui::TableSetColumnIndex(4);
 
     ImGui::TextColored(ImVec4(1, 0, 0, 1), "[!]");
     if (ImGui::IsItemHovered())

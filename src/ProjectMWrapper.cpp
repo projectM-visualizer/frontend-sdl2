@@ -1,13 +1,13 @@
 #include "ProjectMWrapper.h"
 
+#include "ProjectMSDLApplication.h"
 #include "SDLRenderingWindow.h"
 
 #include "notifications/DisplayToastNotification.h"
 
+#include <Poco/Delegate.h>
 #include <Poco/File.h>
 #include <Poco/NotificationCenter.h>
-
-#include <Poco/Util/Application.h>
 
 #include <SDL2/SDL_opengl.h>
 
@@ -18,7 +18,10 @@ const char* ProjectMWrapper::name() const
 
 void ProjectMWrapper::initialize(Poco::Util::Application& app)
 {
-    _config = app.config().createView("projectM");
+    auto& projectMSDLApp = dynamic_cast<ProjectMSDLApplication&>(app);
+    _projectMConfigView = projectMSDLApp.config().createView("projectM");
+    _userConfig = projectMSDLApp.UserConfiguration();
+    poco_information_f1(_logger, "Events enabled: %?d", _projectMConfigView->eventsEnabled());
 
     if (!_projectM)
     {
@@ -35,18 +38,18 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         _projectM = projectm_create();
 
         projectm_set_window_size(_projectM, canvasWidth, canvasHeight);
-        projectm_set_fps(_projectM, _config->getInt("fps", 60));
-        projectm_set_mesh_size(_projectM, _config->getInt("meshX", 220), _config->getInt("meshY", 125));
-        projectm_set_aspect_correction(_projectM, _config->getBool("aspectCorrectionEnabled", true));
-        projectm_set_preset_locked(_projectM, _config->getBool("presetLocked", false));
+        projectm_set_fps(_projectM, _projectMConfigView->getInt("fps", 60));
+        projectm_set_mesh_size(_projectM, _projectMConfigView->getInt("meshX", 220), _projectMConfigView->getInt("meshY", 125));
+        projectm_set_aspect_correction(_projectM, _projectMConfigView->getBool("aspectCorrectionEnabled", true));
+        projectm_set_preset_locked(_projectM, _projectMConfigView->getBool("presetLocked", false));
 
         // Preset display settings
-        projectm_set_preset_duration(_projectM, _config->getInt("displayDuration", 30));
-        projectm_set_soft_cut_duration(_projectM, _config->getInt("transitionDuration", 3));
-        projectm_set_hard_cut_enabled(_projectM, _config->getBool("hardCutsEnabled", false));
-        projectm_set_hard_cut_duration(_projectM, _config->getInt("hardCutDuration", 20));
-        projectm_set_hard_cut_sensitivity(_projectM, static_cast<float>(_config->getDouble("hardCutSensitivity", 1.0)));
-        projectm_set_beat_sensitivity(_projectM, static_cast<float>(_config->getDouble("beatSensitivity", 1.0)));
+        projectm_set_preset_duration(_projectM, _projectMConfigView->getInt("displayDuration", 30));
+        projectm_set_soft_cut_duration(_projectM, _projectMConfigView->getInt("transitionDuration", 3));
+        projectm_set_hard_cut_enabled(_projectM, _projectMConfigView->getBool("hardCutsEnabled", false));
+        projectm_set_hard_cut_duration(_projectM, _projectMConfigView->getInt("hardCutDuration", 20));
+        projectm_set_hard_cut_sensitivity(_projectM, static_cast<float>(_projectMConfigView->getDouble("hardCutSensitivity", 1.0)));
+        projectm_set_beat_sensitivity(_projectM, static_cast<float>(_projectMConfigView->getDouble("beatSensitivity", 1.0)));
 
         if (!texturePaths.empty())
         {
@@ -63,7 +66,7 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         // Playlist
         _playlist = projectm_playlist_create(_projectM);
 
-        projectm_playlist_set_shuffle(_playlist, _config->getBool("shuffleEnabled", true));
+        projectm_playlist_set_shuffle(_playlist, _projectMConfigView->getBool("shuffleEnabled", true));
 
         for (const auto& presetPath : presetPaths)
         {
@@ -86,11 +89,16 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
     }
 
     Poco::NotificationCenter::defaultCenter().addObserver(_playbackControlNotificationObserver);
+
+    // Observe user configuration changes (set via the settings window)
+    _userConfig->propertyChanged += Poco::delegate(this, &ProjectMWrapper::OnConfigurationPropertyChanged);
+    _userConfig->propertyRemoved += Poco::delegate(this, &ProjectMWrapper::OnConfigurationPropertyRemoved);
 }
 
 void ProjectMWrapper::uninitialize()
 {
-
+    _userConfig->propertyRemoved -= Poco::delegate(this, &ProjectMWrapper::OnConfigurationPropertyRemoved);
+    _userConfig->propertyChanged -= Poco::delegate(this, &ProjectMWrapper::OnConfigurationPropertyChanged);
     Poco::NotificationCenter::defaultCenter().removeObserver(_playbackControlNotificationObserver);
 
     if (_projectM)
@@ -118,7 +126,7 @@ projectm_playlist_handle ProjectMWrapper::Playlist() const
 
 int ProjectMWrapper::TargetFPS()
 {
-    return _config->getInt("fps", 60);
+    return _projectMConfigView->getInt("fps", 60);
 }
 
 void ProjectMWrapper::RenderFrame() const
@@ -129,10 +137,10 @@ void ProjectMWrapper::RenderFrame() const
     size_t currentMeshX{0};
     size_t currentMeshY{0};
     projectm_get_mesh_size(_projectM, &currentMeshX, &currentMeshY);
-    if (currentMeshX != _config->getInt("meshX", 220) ||
-        currentMeshY != _config->getInt("meshY", 125))
+    if (currentMeshX != _projectMConfigView->getInt("meshX", 220) ||
+        currentMeshY != _projectMConfigView->getInt("meshY", 125))
     {
-        projectm_set_mesh_size(_projectM, _config->getInt("meshX", 220), _config->getInt("meshY", 125));
+        projectm_set_mesh_size(_projectM, _projectMConfigView->getInt("meshX", 220), _projectMConfigView->getInt("meshY", 125));
     }
 
     projectm_opengl_render_frame(_projectM);
@@ -140,9 +148,9 @@ void ProjectMWrapper::RenderFrame() const
 
 void ProjectMWrapper::DisplayInitialPreset()
 {
-    if (!_config->getBool("enableSplash", true))
+    if (!_projectMConfigView->getBool("enableSplash", true))
     {
-        if (_config->getBool("shuffleEnabled", true))
+        if (_projectMConfigView->getBool("shuffleEnabled", true))
         {
             projectm_playlist_play_next(_playlist, true);
         }
@@ -195,15 +203,11 @@ void ProjectMWrapper::PlaybackControlNotificationHandler(const Poco::AutoPtr<Pla
         }
 
         case PlaybackControlNotification::Action::ToggleShuffle:
-            projectm_playlist_set_shuffle(_playlist, !projectm_playlist_get_shuffle(_playlist));
-            _config->setBool("shuffleEnabled", projectm_playlist_get_shuffle(_playlist));
+            _userConfig->setBool("projectM.shuffleEnabled", !projectm_playlist_get_shuffle(_playlist));
             break;
 
         case PlaybackControlNotification::Action::TogglePresetLocked: {
-            bool locked = !projectm_get_preset_locked(_projectM);
-            projectm_set_preset_locked(_projectM, locked);
-            _config->setBool("presetLocked", locked);
-            Poco::NotificationCenter::defaultCenter().postNotification(new UpdateWindowTitleNotification);
+            _userConfig->setBool("projectM.presetLocked", !projectm_get_preset_locked(_projectM));
             break;
         }
     }
@@ -214,20 +218,44 @@ std::vector<std::string> ProjectMWrapper::GetPathListWithDefault(const std::stri
     using Poco::Util::AbstractConfiguration;
 
     std::vector<std::string> pathList;
-    auto defaultPresetPath = _config->getString(baseKey, defaultPath);
+    auto defaultPresetPath = _projectMConfigView->getString(baseKey, defaultPath);
     if (!defaultPresetPath.empty())
     {
         pathList.push_back(defaultPresetPath);
     }
     AbstractConfiguration::Keys subKeys;
-    _config->keys(baseKey, subKeys);
+    _projectMConfigView->keys(baseKey, subKeys);
     for (const auto& key : subKeys)
     {
-        auto path = _config->getString(baseKey + "." + key, "");
+        auto path = _projectMConfigView->getString(baseKey + "." + key, "");
         if (!path.empty())
         {
             pathList.push_back(std::move(path));
         }
     }
     return pathList;
+}
+
+void ProjectMWrapper::OnConfigurationPropertyChanged(const Poco::Util::AbstractConfiguration::KeyValue& property)
+{
+    OnConfigurationPropertyRemoved(property.key());
+}
+
+void ProjectMWrapper::OnConfigurationPropertyRemoved(const std::string& key)
+{
+    if (_projectM == nullptr || _playlist == nullptr)
+    {
+        return;
+    }
+
+    if (key == "projectM.presetLocked")
+    {
+        projectm_set_preset_locked(_projectM, _projectMConfigView->getBool("presetLocked"));
+        Poco::NotificationCenter::defaultCenter().postNotification(new UpdateWindowTitleNotification);
+    }
+
+    if (key == "projectM.shuffleEnabled")
+    {
+        projectm_playlist_set_shuffle(_playlist, _projectMConfigView->getBool("shuffleEnabled"));
+    }
 }

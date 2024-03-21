@@ -12,7 +12,6 @@
 #include <Poco/Logger.h>
 #include <Poco/NObserver.h>
 
-#include <Poco/Util/PropertyFileConfiguration.h>
 #include <Poco/Util/Subsystem.h>
 
 struct ImFont;
@@ -27,30 +26,6 @@ public:
     void initialize(Poco::Util::Application& app) override;
 
     void uninitialize() override;
-
-    /**
-     * @brief Sets the current user's configuration file.
-     * @param config The properties file instance which stores the settings for the current user.
-     */
-    void UserConfiguration(Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config);
-
-    /**
-     * @brief Returns the user configuration file.
-     * @return The properties file instance which stores the settings for the current user.
-     */
-    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> UserConfiguration();
-
-    /**
-     * @brief Sets the command line override map.
-     * @param config The properties file instance which stores the UI settings.
-     */
-    void CommandLineConfiguration(Poco::AutoPtr<Poco::Util::MapConfiguration> config);
-
-    /**
-     * @brief Returns the command line override map.
-     * @return The properties file instance which stores the UI settings.
-     */
-    Poco::AutoPtr<Poco::Util::MapConfiguration> CommandLineConfiguration();
 
     /**
      * @brief Updates the font size after DPI changes.
@@ -127,9 +102,6 @@ private:
     void DisplayToastNotificationHandler(const Poco::AutoPtr<DisplayToastNotification>& notification);
 
     ProjectMWrapper* _projectMWrapper{nullptr};
-
-    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> _userConfiguration; //!< The current user's configuration, used to store/reset changes made in the UI's settings dialog.
-    Poco::AutoPtr<Poco::Util::MapConfiguration> _commandLineOverrides; //!< The command-line override settings.
 
     Poco::NObserver<ProjectMGUI, DisplayToastNotification> _displayToastNotificationObserver{*this, &ProjectMGUI::DisplayToastNotificationHandler};
 
