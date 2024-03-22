@@ -94,10 +94,12 @@ bool FileChooser::Draw()
         ChangeDirectory(Poco::Path::home());
     }
 
-    ImGui::OpenPopup(_title.c_str());
+    std::string dialogTileAndId = _title + "###File Chooser";
+
+    ImGui::OpenPopup(dialogTileAndId.c_str());
 
     ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
-    if (ImGui::BeginPopupModal(_title.c_str(), &_visible, ImGuiWindowFlags_NoCollapse))
+    if (ImGui::BeginPopupModal(dialogTileAndId.c_str(), &_visible, ImGuiWindowFlags_NoCollapse))
     {
         DrawNavButtons();
 

@@ -30,7 +30,7 @@ void AboutWindow::Draw()
     }
 
     ImGui::SetNextWindowSize(ImVec2(750, 600), ImGuiCond_FirstUseEver);
-    if (ImGui::Begin("About the projectM SDL Frontend", &_visible, ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin("About the projectM SDL Frontend###About", &_visible, ImGuiWindowFlags_NoCollapse))
     {
         _gui.PushToastFont();
         ImGui::TextUnformatted("projectM SDL Frontend");
