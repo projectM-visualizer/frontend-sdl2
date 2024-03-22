@@ -29,6 +29,31 @@ public:
 
 private:
     /**
+     * @brief Draws the settings tab.
+     */
+    void DrawProjectMSettingsTab();
+
+    /**
+     * @brief Draws the window/rendering settings tab.
+     */
+    void DrawWindowSettingsTab();
+
+    /**
+     * @brief Draws the audio settings tab.
+     */
+    void DrawAudioSettingsTab();
+
+    /**
+     * @brief Draws the help tab.
+     */
+    void DrawHelpTab() const;
+
+    /**
+     * @brief Displays the save button.
+     */
+    void SaveButton();
+
+    /**
      * @brief Displays a setting name laben and shows a tooltip if hovered.
      * @param label The label text.
      * @param tooltipText The tooltip displayed when hovering the setting name.
