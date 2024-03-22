@@ -137,44 +137,43 @@ bool FileChooser::Draw()
             }
 
             ImGui::EndListBox();
-
-            ImGui::PushStyleColor(ImGuiCol_Button, 0xFF000080);
-            if (ImGui::Button("Cancel"))
-            {
-                _selectedFiles.clear();
-                fileSelected = true;
-                Close();
-            }
-            ImGui::PopStyleColor();
-            ImGui::SameLine();
-            if (ImGui::Button("Select"))
-            {
-                for (auto index : _selectedFileIndices)
-                {
-                    _selectedFiles.emplace_back(_currentFileList.at(index));
-                }
-
-                if (_selectedFileIndices.empty() && _mode == Mode::Directory)
-                {
-                    _selectedFiles.emplace_back(Poco::Path(_currentDir).makeDirectory());
-                }
-                else
-                {
-                    // ToDo: Display "Select at least one entry from the list"
-                }
-
-                fileSelected = true;
-                Close();
-            }
-
-            ImGui::EndPopup();
         }
+
+        ImGui::PushStyleColor(ImGuiCol_Button, 0xFF000080);
+        if (ImGui::Button("Cancel"))
+        {
+            _selectedFiles.clear();
+            fileSelected = true;
+            Close();
+        }
+        ImGui::PopStyleColor();
+        ImGui::SameLine();
+        if (ImGui::Button("Select"))
+        {
+            for (auto index : _selectedFileIndices)
+            {
+                _selectedFiles.emplace_back(_currentFileList.at(index));
+            }
+
+            if (_selectedFileIndices.empty() && _mode == Mode::Directory)
+            {
+                _selectedFiles.emplace_back(Poco::Path(_currentDir).makeDirectory());
+            }
+            else
+            {
+                // ToDo: Display "Select at least one entry from the list"
+            }
+
+            fileSelected = true;
+            Close();
+        }
+
+        ImGui::EndPopup();
     }
     else
     {
         Close();
     }
-
 
     return fileSelected;
 }
