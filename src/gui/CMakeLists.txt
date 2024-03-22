@@ -1,12 +1,12 @@
 # Font embedding
-if(CMAKE_CROSSCOMPILING)
+if (CMAKE_CROSSCOMPILING)
     find_program(BINARY_TO_COMPRESSED_EXECUTABLE binary_to_compressed_c)
-    if(NOT BINARY_TO_COMPRESSED_EXECUTABLE)
+    if (NOT BINARY_TO_COMPRESSED_EXECUTABLE)
         message(FATAL_ERROR "Could not find host-executable \"binary_to_compressed_c\" tool. Add its location to CMAKE_PREFIX_PATH.")
-    endif()
-else()
+    endif ()
+else ()
     set(BINARY_TO_COMPRESSED_EXECUTABLE "$<TARGET_FILE:ImGuiBinaryToCompressedC>")
-endif()
+endif ()
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/AnonymousProFont.h"
         COMMAND ${BINARY_TO_COMPRESSED_EXECUTABLE} "${CMAKE_SOURCE_DIR}/src/resources/AnonymousPro-Regular.ttf" AnonymousPro > "${CMAKE_CURRENT_BINARY_DIR}/AnonymousProFont.h"
@@ -21,19 +21,30 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/LiberationSansFont.h"
 add_library(ProjectMSDL-GUI STATIC
         "${CMAKE_CURRENT_BINARY_DIR}/AnonymousProFont.h"
         "${CMAKE_CURRENT_BINARY_DIR}/LiberationSansFont.h"
+        AboutWindow.cpp
+        AboutWindow.h
         FileChooser.cpp
         FileChooser.h
+        HelpWindow.cpp
+        HelpWindow.h
         MainMenu.cpp
         MainMenu.h
         PresetSelection.cpp
         PresetSelection.h
         ProjectMGUI.cpp
         ProjectMGUI.h
+        SettingsWindow.cpp
+        SettingsWindow.h
+        SystemBrowser.cpp
+        SystemBrowser.h
         ToastMessage.cpp
         ToastMessage.h
-        HelpWindow.cpp HelpWindow.h SettingsWindow.cpp SettingsWindow.h
-        SystemBrowser.cpp
-        SystemBrowser.h)
+        )
+
+target_compile_definitions(ProjectMSDL-GUI
+        PRIVATE
+        PROJECTMSDL_VERSION="${PROJECT_VERSION}"
+        )
 
 target_include_directories(ProjectMSDL-GUI
         PUBLIC

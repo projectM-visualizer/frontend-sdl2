@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AboutWindow.h"
 #include "HelpWindow.h"
 #include "MainMenu.h"
 #include "ToastMessage.h"
@@ -94,6 +95,11 @@ public:
     void ShowSettingsWindow();
 
     /**
+     * @brief Displays the about window.
+     */
+    void ShowAboutWindow();
+
+    /**
      * @brief Displays the help window.
      */
     void ShowHelpWindow();
@@ -118,6 +124,7 @@ private:
 
     MainMenu _mainMenu{*this};
     SettingsWindow _settingsWindow{*this}; //!< The settings window.
+    AboutWindow _aboutWindow{*this}; //!< The about window.
     HelpWindow _helpWindow; //!< Help window with shortcuts and tips.
 
     std::unique_ptr<ToastMessage> _toast; //!< Current toast to be displayed.

@@ -163,6 +163,7 @@ void ProjectMGUI::Draw()
     {
         _mainMenu.Draw();
         _settingsWindow.Draw();
+        _aboutWindow.Draw();
         _helpWindow.Draw();
     }
 
@@ -200,6 +201,11 @@ void ProjectMGUI::PopFont()
 void ProjectMGUI::ShowSettingsWindow()
 {
     _settingsWindow.Show();
+}
+
+void ProjectMGUI::ShowAboutWindow()
+{
+    _aboutWindow.Show();
 }
 
 void ProjectMGUI::ShowHelpWindow()

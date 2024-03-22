@@ -63,6 +63,18 @@ public:
      */
     void ChangeBeatSensitivity(float value);
 
+    /**
+     * @brief Returns the libprojectM version this application was built against.
+     * @return A string with the libprojectM build version.
+     */
+    std::string ProjectMBuildVersion();
+
+    /**
+     * @brief Returns the libprojectM version this applications currently runs with.
+     * @return A string with the libprojectM runtime library version.
+     */
+    std::string ProjectMRuntimeVersion();
+
 private:
     /**
      * @brief projectM callback. Called whenever a preset is switched.

@@ -146,6 +146,7 @@ void MainMenu::Draw()
 
             if (ImGui::MenuItem("About projectM..."))
             {
+                _gui.ShowAboutWindow();
             }
 
             ImGui::Separator();

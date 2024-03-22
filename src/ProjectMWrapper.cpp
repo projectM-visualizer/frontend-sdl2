@@ -179,6 +179,20 @@ void ProjectMWrapper::ChangeBeatSensitivity(float value)
         new DisplayToastNotification(Poco::format("Beat Sensitivity: %.2hf", projectm_get_beat_sensitivity(_projectM))));
 }
 
+std::string ProjectMWrapper::ProjectMBuildVersion()
+{
+    return PROJECTM_VERSION_STRING;
+}
+
+std::string ProjectMWrapper::ProjectMRuntimeVersion()
+{
+    auto* projectMVersion = projectm_get_version_string();
+    std::string projectMRuntimeVersion(projectMVersion);
+    projectm_free_string(projectMVersion);
+
+    return projectMRuntimeVersion;
+}
+
 void ProjectMWrapper::PresetSwitchedEvent(bool isHardCut, unsigned int index, void* context)
 {
     auto that = reinterpret_cast<ProjectMWrapper*>(context);
