@@ -44,6 +44,7 @@ void SettingsWindow::Draw()
     }
     windowId.append("###Settings");
 
+    ImGui::SetNextWindowSize(ImVec2(1050, 550), ImGuiCond_FirstUseEver);
     if (ImGui::Begin(windowId.c_str(), &_visible, windowFlags))
     {
         if (ImGui::BeginTabBar("projectM Settings", tabBarFlags))

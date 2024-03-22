@@ -31,6 +31,7 @@ void HelpWindow::Draw()
     constexpr ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
     constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
 
+    ImGui::SetNextWindowSize(ImVec2(1000, 600), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Help", &_visible, windowFlags))
     {
         if (ImGui::BeginTabBar("Help Topics", tabBarFlags))

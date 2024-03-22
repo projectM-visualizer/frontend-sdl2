@@ -96,6 +96,7 @@ bool FileChooser::Draw()
 
     ImGui::OpenPopup(_title.c_str());
 
+    ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     if (ImGui::BeginPopupModal(_title.c_str(), &_visible, ImGuiWindowFlags_NoCollapse))
     {
         DrawNavButtons();
