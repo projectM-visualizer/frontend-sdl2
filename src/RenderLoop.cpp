@@ -72,7 +72,9 @@ void RenderLoop::PollEvents()
         }
     }
 
-    SDL_ShowCursor(SDL_DISABLE);
+    if (!_sdlRenderingWindow.getConfig()->getBool("showCursor", true)) {
+        SDL_ShowCursor(SDL_DISABLE);
+    }
 
 }
 
