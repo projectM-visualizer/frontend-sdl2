@@ -71,6 +71,9 @@ void RenderLoop::PollEvents()
                 break;
         }
     }
+
+    SDL_ShowCursor(SDL_DISABLE);
+
 }
 
 void RenderLoop::CheckViewportSize()
