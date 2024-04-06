@@ -68,6 +68,12 @@ public:
      */
     void NextDisplay();
 
+    /**
+     * @brief Retrieves the configuration view for the window.
+     * @return The configuration view for the window.
+     */
+    Poco::AutoPtr<Poco::Util::AbstractConfiguration> getConfig() const;
+
 protected:
 
     /**

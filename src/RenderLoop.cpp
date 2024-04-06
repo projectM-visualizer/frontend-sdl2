@@ -71,6 +71,11 @@ void RenderLoop::PollEvents()
                 break;
         }
     }
+
+    if (!_sdlRenderingWindow.getConfig()->getBool("showCursor", true)) {
+        SDL_ShowCursor(SDL_DISABLE);
+    }
+
 }
 
 void RenderLoop::CheckViewportSize()

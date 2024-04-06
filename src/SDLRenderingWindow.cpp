@@ -19,6 +19,11 @@ void SDLRenderingWindow::initialize(Poco::Util::Application& app)
     }
 }
 
+Poco::AutoPtr<Poco::Util::AbstractConfiguration> SDLRenderingWindow::getConfig() const
+{
+    return _config;
+}
+
 void SDLRenderingWindow::uninitialize()
 {
     if (_renderingWindow)

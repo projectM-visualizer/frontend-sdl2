@@ -159,6 +159,10 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
     options.addOption(Option("beatSensitivity", "", "Beat sensitivity. Between 0.0 and 5.0. Default 1.0.",
                              false, "<number>", true)
                           .binding("projectM.beatSensitivity", _commandLineOverrides));
+    options.addOption(Option("showCursor", "", "Shows cursor",
+                             false, "true/false", true)
+                          .binding("window.showCursor", _commandLineOverrides));
+
 
 }
 
