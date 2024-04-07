@@ -36,6 +36,11 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
         auto texturePaths = GetPathListWithDefault("texturePath", app.config().getString("", ""));
 
         _projectM = projectm_create();
+        if (!_projectM)
+        {
+            poco_error(_logger, "Failed to initialize projectM. Possible reasons are a lack of required OpenGL features or GPU resources.");
+            throw std::runtime_error("projectM initialization failed");
+        }
 
         int fps = _projectMConfigView->getInt("fps", 60);
         if (fps <= 0)
@@ -72,6 +77,12 @@ void ProjectMWrapper::initialize(Poco::Util::Application& app)
 
         // Playlist
         _playlist = projectm_playlist_create(_projectM);
+        if (!_playlist)
+        {
+
+            poco_error(_logger, "Failed to create the projectM preset playlist manager instance.");
+            throw std::runtime_error("Playlist initialization failed");
+        }
 
         projectm_playlist_set_shuffle(_playlist, _projectMConfigView->getBool("shuffleEnabled", true));
 
