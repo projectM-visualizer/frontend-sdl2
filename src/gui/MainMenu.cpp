@@ -30,18 +30,6 @@ void MainMenu::Draw()
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Load Playlist...", "Ctrl+l"))
-            {
-            }
-            if (ImGui::MenuItem("Save Playlist...", "Ctrl+s"))
-            {
-            }
-            if (ImGui::MenuItem("Open Playlist Manager...", "Ctrl+p"))
-            {
-            }
-
-            ImGui::Separator();
-
             if (ImGui::MenuItem("Settings...", "Ctrl+s"))
             {
                 _gui.ShowSettingsWindow();
