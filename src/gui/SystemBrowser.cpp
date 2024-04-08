@@ -22,7 +22,7 @@ void SystemBrowser::OpenURL(const std::string& url)
     handle.wait();
 #endif
 #ifdef __APPLE__
-    CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<UInt8*>(url.c_str()), url.length(), kCFStringEncodingASCII, nullptr);
+    CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<const UInt8*>(url.c_str()), url.length(), kCFStringEncodingASCII, nullptr);
     LSOpenCFURLRef(urlRef, 0);
     CFRelease(urlRef);
 #endif
