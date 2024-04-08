@@ -11,6 +11,8 @@
 
 #include <SDL2/SDL_opengl.h>
 
+#include <cmath>
+
 const char* ProjectMWrapper::name() const
 {
     return "ProjectM Wrapper";
