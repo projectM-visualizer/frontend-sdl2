@@ -57,5 +57,6 @@ target_link_libraries(ProjectMSDL-GUI
         Poco::Util
         ImGui
         libprojectM::projectM
+        "$<$<PLATFORM_ID:Darwin>:-framework ApplicationServices>"
         )
 
