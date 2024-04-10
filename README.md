@@ -11,8 +11,11 @@ present.
 
 ### Build and install libprojectM
 
-First, [build](https://github.com/projectM-visualizer/projectm/wiki/Building-libprojectM)
-and `sudo make install` [libprojectM](https://github.com/projectM-visualizer/projectm)
+First, [build libprojectM](https://github.com/projectM-visualizer/projectm/wiki/Building-libprojectM) or get it via your
+favorite dependency management/packaging tool. For testing, you can install libprojectM somewhere inside your
+home/development directory using `CMAKE_INSTALL_PREFIX`, then pass the same install path to the frontend-sdl2 build
+using `CMAKE_PREFIX_PATH`. Please refer
+to [CMake's documentation](https://cmake.org/cmake/help/latest/variable/CMAKE_PREFIX_PATH.html) for details.
 
 ### Dependencies
 
@@ -29,12 +32,19 @@ Depending on your needs, you can either build them yourself or install them usin
 are some examples for the three major desktop platforms:
 
 ```shell
-sudo apt install libsdl2-dev libpoco-dev cmake  # Debian/Ubuntu Linux
-brew install sdl2  # macOS
-vcpkg install sdl2 poco # Windows
+sudo apt install libsdl2-dev libpoco-dev libfreetype-dev cmake  # Debian/Ubuntu Linux
+brew install sdl2 poco freetype  # macOS
+vcpkg install sdl2 poco freetype # Windows, should be pulled in automatically via vcpkg.json
 ```
 
 ### Configure and build projectMSDL
+
+After cloning or updating the Git repository, always remember to update or initialize the submodules as well. this is
+not required when building from a release tarball or ZIP.
+
+```shell
+git submodule --init update
+```
 
 If all dependencies are in the CMake and/or the system search directories, you can configure and build the application
 with these commands, executed from the source dir:
@@ -45,15 +55,17 @@ cmake -S . -B cmake-build -DCMAKE_BUILD_TYPE=Release
 cmake --build cmake-build --config Release
 ```
 
-You can optionally add the `--parallel` argument to the build command to speed up the build.
+You can optionally add the `--parallel` argument with the number of CPU cores to use to the build command to speed up
+the build.
 
 If your dependencies are in different locations than the default search paths, or you're cross-compiling, you'll need to
-add more options. Covering all CMake options is out of the scope of this document. Please read
+add more options like `CMAKE_PREFIX_PATH`. Covering all CMake options is out of the scope of this document. Please read
 the [Mastering CMake guide](https://cmake.org/cmake/help/book/mastering-cmake/index.html) and
 the [CMake documentation](https://cmake.org/cmake/help/latest/) for more information.
 
-This will use CMake's default build file generator for your current platform and build the project in Release (
-optimized) configuration. If the build was successful, you should have an executable in the build directory.
+The above command will use CMake's default build file generator for your current platform and build the project in
+Release (optimized) configuration. If the build was successful, you should have an executable in the build directory. On
+Windows, you may need to specify the correct Visual Studio generator and architecture manually.
 
 ### Install projectMSDL
 
@@ -82,8 +94,8 @@ can also create a user configuration file in your user's home directory. Dependi
 
 - Windows: `%APPDATA%\projectM\projectMSDL.properties`
 - Linux:
-  - If `XDG_CONFIG_HOME` env var is non-empty: `$XDG_CONFIG_HOME/projectM/projectMSDL.properties`
-  - Otherwise: `~/.config/projectM/projectMSDL.properties`
+    - If `XDG_CONFIG_HOME` env var is non-empty: `$XDG_CONFIG_HOME/projectM/projectMSDL.properties`
+    - Otherwise: `~/.config/projectM/projectMSDL.properties`
 - macOS: `~/Library/Preferences/projectM/projectMSDL.properties`
 
 You can copy the [config file template](src/resources/projectMSDL.properties.in) there and change anything in `@@`.
@@ -99,23 +111,24 @@ cmake-build/src/projectMSDL --presetPath /path/to/presets-cream-of-the-crop --te
 
 Press ESC to toggle the UI.
 
-## Developing
+## System-Specific CMake Examples
 
-This project uses CMake, which can generate project files for your favorite IDE or build system
+The following examples show how to configure and build projectMSDL with CMake on the different supported platforms.
 
 ### Windows
 
-To generate a Visual Studio 2022 project for Win64 and build for Release:
+To generate a Visual Studio 2022 project for Win64 and build for Release, with then option to also compile a Debug build
+from within the generated solution:
 
 ```shell
 mkdir cmake-build
-cmake -G "Visual Studio 17 2022" -A x64 -S . -B cmake-build
+cmake -G "Visual Studio 17 2022" -A x64 -S . -B cmake-build -DCMAKE_CONFIGURATION_TYPES=Debug,Release
 cmake --build cmake-build --config Release
 ```
 
 ### Linux
 
-To generate a Makefile project build for Release:
+To generate a UNIX Makefile project build for Release:
 
 ```shell
 mkdir cmake-build
@@ -137,6 +150,6 @@ To generate an Xcode project and build for Release:
 
 ```shell
 mkdir cmake-build
-cmake -G Xcode -S . -B cmake-build
+cmake -G Xcode -S . -B cmake-build -DCMAKE_CONFIGURATION_TYPES=Debug,Release
 cmake --build cmake-build --config Release
 ```
