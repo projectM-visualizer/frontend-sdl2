@@ -12,6 +12,11 @@ add_library(ImGui STATIC
         vendor/imgui/backends/imgui_impl_opengl3_loader.h
         )
 
+target_link_libraries(ImGui
+        PUBLIC
+        SDL2::SDL2$<$<STREQUAL:${SDL2_LINKAGE},static>:-static>
+        )
+
 if(ENABLE_FREETYPE AND Freetype_FOUND)
     target_sources(ImGui
             PRIVATE
