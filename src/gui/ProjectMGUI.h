@@ -105,6 +105,8 @@ public:
     void ShowHelpWindow();
 
 private:
+    float GetScalingFactor();
+
     void DisplayToastNotificationHandler(const Poco::AutoPtr<DisplayToastNotification>& notification);
 
     ProjectMWrapper* _projectMWrapper{nullptr};
@@ -120,7 +122,7 @@ private:
 
     uint64_t _lastFrameTicks{0}; //!< Tick count of the last frame (see SDL_GetTicks64)
 
-    float _dpi{0.0f}; //!< Last DPI value.
+    float _textScalingFactor{0.0f}; //!< The text scaling factor.
 
     MainMenu _mainMenu{*this};
     SettingsWindow _settingsWindow{*this}; //!< The settings window.

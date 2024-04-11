@@ -71,7 +71,6 @@ void ProjectMGUI::UpdateFontSize()
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    float dpi{96.0f}; // Use default value of 96 DPI if SDL_GetDisplayDPI doesn't return a value!
     auto displayIndex = SDL_GetWindowDisplayIndex(_renderingWindow);
     if (displayIndex < 0)
     {
@@ -79,28 +78,24 @@ void ProjectMGUI::UpdateFontSize()
         return;
     }
 
-    auto result = SDL_GetDisplayDPI(displayIndex, &dpi, nullptr, nullptr);
-    if (result != 0)
-    {
-        poco_debug_f2(_logger, "Could not get DPI info for display %?d: %s", displayIndex, std::string(SDL_GetError()));
-    }
+    auto newScalingFactor = GetScalingFactor();
 
-    // Only interested in changes of > 1 DPI, really.
-    if (static_cast<uint32_t>(dpi) == static_cast<uint32_t>(_dpi))
+    // Only interested in changes of .05 or more
+    if (std::abs(_textScalingFactor - newScalingFactor) < 0.05)
     {
         return;
     }
 
-    poco_debug_f3(_logger, "DPI change for display %?d: %hf -> %hf", displayIndex, _dpi, dpi);
+    poco_debug_f3(_logger, "Scaling factor change for display %?d: %hf -> %hf", displayIndex, _textScalingFactor, newScalingFactor);
 
-    _dpi = dpi;
+    _textScalingFactor = newScalingFactor;
 
     ImFontConfig config;
     config.MergeMode = true;
 
     io.Fonts->Clear();
-    _uiFont = io.Fonts->AddFontFromMemoryCompressedTTF(&AnonymousPro_compressed_data, AnonymousPro_compressed_size, floor(12.0f * (_dpi / 96.0f)));
-    _toastFont = io.Fonts->AddFontFromMemoryCompressedTTF(&LiberationSans_compressed_data, LiberationSans_compressed_size, floor(20.0f * (_dpi / 96.0f)));
+    _uiFont = io.Fonts->AddFontFromMemoryCompressedTTF(&AnonymousPro_compressed_data, AnonymousPro_compressed_size, floor(24.0f * _textScalingFactor));
+    _toastFont = io.Fonts->AddFontFromMemoryCompressedTTF(&LiberationSans_compressed_data, LiberationSans_compressed_size, floor(40.0f * _textScalingFactor));
     io.Fonts->Build();
     ImGui_ImplOpenGL3_CreateFontsTexture();
 
@@ -211,6 +206,21 @@ void ProjectMGUI::ShowAboutWindow()
 void ProjectMGUI::ShowHelpWindow()
 {
     _helpWindow.Show();
+}
+
+float ProjectMGUI::GetScalingFactor()
+{
+    int windowWidth;
+    int windowHeight;
+    int renderWidth;
+    int renderHeight;
+
+    SDL_GetWindowSize(_renderingWindow, &windowWidth, &windowHeight);
+    SDL_GL_GetDrawableSize(_renderingWindow, &renderWidth, &renderHeight);
+
+    // If the OS has a scaled UI, this will return the inverse factor. E.g. if the display is scaled to 200%,
+    // the renderWidth (in actual pixels) will be twice as much as the "virtual" unscaled window width.
+    return ((static_cast<float>(windowWidth) / static_cast<float>(renderWidth)) + (static_cast<float>(windowHeight) / static_cast<float>(renderHeight))) * 0.5f;
 }
 
 void ProjectMGUI::DisplayToastNotificationHandler(const Poco::AutoPtr<DisplayToastNotification>& notification)
