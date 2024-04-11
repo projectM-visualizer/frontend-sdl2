@@ -13,8 +13,8 @@ project(projectMSDL
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# Default install layouts.
-option(ENABLE_FLAT_PACKAGE "Creates a \"flat\" install layout with files and preset/texture dirs directly in the main dir." OFF)
+option(ENABLE_FLAT_PACKAGE "Creates a \"flat\" install layout with the executable, configuration file(s) and preset/texture dirs directly in the install prefix." OFF)
+option(ENABLE_INSTALL_BDEPS "Installs all shared libraries projectMSDL requires to run." OFF)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ENABLE_FLAT_PACKAGE)
     include(GNUInstallDirs)
 
@@ -34,11 +34,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ENABLE_FLAT_PACKAGE)
     set(DEFAULT_PRESETS_PATH "${_config_dir_abs_init}/presets" CACHE STRING "Default presets path in the configuration file.")
     set(DEFAULT_TEXTURES_PATH "${_config_dir_abs_init}/textures" CACHE STRING "Default textures path in the configuration file.")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT ENABLE_FLAT_PACKAGE)
+    set(DEFAULT_PACKAGING_CONFIG "packaging-macos.cmake")
+
     # Package as .app bundle on macOS
     set(BUNDLE_BASE_DIR "projectM.app/Contents")
     set(PROJECTMSDL_BIN_DIR "${BUNDLE_BASE_DIR}/MacOS" CACHE STRING "Directory to install executables in, relative to the install prefix.")
     set(PROJECTMSDL_LIB_DIR "${BUNDLE_BASE_DIR}/PlugIns" CACHE STRING "Directory to install additional libraries in, relative to the install prefix.")
-    set(PROJECTMSDL_DATA_DIR "{BUNDLE_BASE_DIR}/Resources" CACHE STRING "Directory to install the config file, presets and texture, relative to the install prefix.")
+    set(PROJECTMSDL_DATA_DIR "${BUNDLE_BASE_DIR}/Resources" CACHE STRING "Directory to install the config file, presets and texture, relative to the install prefix.")
     set(PROJECTMSDL_PRESETS_DIR "${PROJECTMSDL_DATA_DIR}/Presets" CACHE STRING "Directory to install optional preset files, relative to the install prefix.")
     set(PROJECTMSDL_TEXTURES_DIR "${PROJECTMSDL_DATA_DIR}/Textures" CACHE STRING "Directory to install optional texture files, relative to the install prefix.")
 
@@ -46,6 +48,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT ENABLE_FLAT_PACKAGE)
     set(DEFAULT_PRESETS_PATH "\${application.dir}/../Resources/Presets" CACHE STRING "Default presets path in the configuration file.")
     set(DEFAULT_TEXTURES_PATH "\${application.dir}/../Resources/Presets" CACHE STRING "Default textures path in the configuration file.")
 else()
+    set(DEFAULT_PACKAGING_CONFIG "packaging-windows.cmake")
+
     # Windows and others: use flat layout.
     set(PROJECTMSDL_BIN_DIR "." CACHE STRING "Directory to install executables in, relative to the install prefix.")
     set(PROJECTMSDL_LIB_DIR "." CACHE STRING "Directory to install additional libraries in, relative to the install prefix.")
@@ -57,6 +61,18 @@ else()
     set(DEFAULT_PRESETS_PATH "\${application.dir}/presets" CACHE STRING "Default presets path in the configuration file.")
     set(DEFAULT_TEXTURES_PATH "\${application.dir}/textures" CACHE STRING "Default textures path in the configuration file.")
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(DEFAULT_PACKAGING_CONFIG "packaging-linux.cmake")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(DEFAULT_PACKAGING_CONFIG "packaging-macos.cmake")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(DEFAULT_PACKAGING_CONFIG "packaging-windows.cmake")
+else()
+    unset(DEFAULT_PACKAGING_CONFIG)
+endif()
+
+set(PACKAGING_CONFIG_FILE "${DEFAULT_PACKAGING_CONFIG}" CACHE FILEPATH "CPack configuration file to use for packaging. This file must \"include(CPack)\" at the end to work properly.")
 
 set(SDL2_LINKAGE "shared" CACHE STRING "Set to either shared or static to specify how libSDL2 should be linked. Defaults to shared.")
 option(ENABLE_FREETYPE "Use the Freetype font rendering library instead of the built-in stb_truetype if available" ON)
@@ -90,7 +106,10 @@ if(ENABLE_TESTING)
 endif()
 
 include(install.cmake)
-include(packaging.cmake)
+
+if(NOT PACKAGING_CONFIG_FILE STREQUAL "")
+    include(${PACKAGING_CONFIG_FILE})
+endif()
 
 message(STATUS "SDL version: ${SDL2_VERSION}")
 message(STATUS "Poco version: ${Poco_VERSION}")

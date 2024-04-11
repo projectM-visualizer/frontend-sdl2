@@ -1,0 +1,1 @@
+A Milkdrop-compatible, cross-platform and open-source audio visualization application.

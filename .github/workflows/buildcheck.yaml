@@ -3,7 +3,8 @@
 # The resulting binaries are not considered for public use though.
 name: Build Check
 
-on: [ push, pull_request ]
+#on: [ push, pull_request ]
+on: workflow_dispatch
 
 jobs:
   build-linux:
@@ -15,7 +16,7 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt update
-          sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev ninja-build libssl-dev
+          sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev ninja-build libssl-dev libfreetype6-dev
 
       # We need to build/link Poco ourselves as static libraries, because Ubuntu Jammy ships with a broken Poco 1.11.0
       - name: Checkout Poco Sources
@@ -29,7 +30,21 @@ jobs:
       - name: Build Poco
         run: |
           mkdir cmake-build-poco
-          cmake -G Ninja -S poco -B cmake-build-poco -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-poco -DENABLE_MONGODB=OFF -DENABLE_REDIS=OFF -DENABLE_PAGECOMPILER=OFF -DENABLE_PAGECOMPILER_FILE2PAGE=OFF -DENABLE_ACTIVERECORD=OFF -DENABLE_ACTIVERECORD_COMPILER=OFF -DENABLE_DATA_ODBC=OFF -DENABLE_DATA_POSTGRESQL=OFF -DENABLE_DATA_MYSQL=OFF -DENABLE_JWT=OFF -DENABLE_PROMETHEUS=OFF
+          cmake -G Ninja -S poco -B cmake-build-poco  \
+            -DBUILD_SHARED_LIBS=OFF  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-poco  \
+            -DENABLE_MONGODB=OFF  \
+            -DENABLE_REDIS=OFF  \
+            -DENABLE_PAGECOMPILER=OFF  \
+            -DENABLE_PAGECOMPILER_FILE2PAGE=OFF  \
+            -DENABLE_ACTIVERECORD=OFF  \
+            -DENABLE_ACTIVERECORD_COMPILER=OFF  \
+            -DENABLE_DATA_ODBC=OFF  \
+            -DENABLE_DATA_POSTGRESQL=OFF  \
+            -DENABLE_DATA_MYSQL=OFF  \
+            -DENABLE_JWT=OFF  \
+            -DENABLE_PROMETHEUS=OFF
           cmake --build cmake-build-poco --parallel
           cmake --install "${{ github.workspace }}/cmake-build-poco"
 
@@ -43,7 +58,10 @@ jobs:
       - name: Build/Install libprojectM
         run: |
           mkdir cmake-build-libprojectm
-          cmake -G Ninja -S projectm -B cmake-build-libprojectm -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-libprojectm
+          cmake -G Ninja -S projectm -B cmake-build-libprojectm  \
+            -DBUILD_SHARED_LIBS=OFF  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-libprojectm
           cmake --build cmake-build-libprojectm --parallel
           cmake --install "${{ github.workspace }}/cmake-build-libprojectm"
 
@@ -56,21 +74,28 @@ jobs:
       - name: Build frontend-sdl2
         run: |
           mkdir cmake-build-frontend-sdl2
-          cmake -G Ninja -S frontend-sdl2 -B cmake-build-frontend-sdl2 -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install-libprojectm;${GITHUB_WORKSPACE}/install-poco" "-DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-frontend-sdl2"
+          cmake -G Ninja -S frontend-sdl2 -B cmake-build-frontend-sdl2  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            "-DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install-libprojectm;${GITHUB_WORKSPACE}/install-poco"  \
+            "-DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-frontend-sdl2"
           cmake --build cmake-build-frontend-sdl2 --parallel
-  #          cmake --install "${{ github.workspace }}/cmake-build-frontend-sdl2"
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G DEB
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-buildcheck-linux
+          path: cmake-build-frontend-sdl2/*.deb
 
   build-windows:
     name: Windows, x64
     runs-on: windows-latest
 
     steps:
-      - name: Setup MSVC dev command prompt
-        uses: TheMrMilchmann/setup-msvc-dev@v3
-        with:
-          arch: x64
-          toolset: 14.38.33130
-
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
         with:
@@ -107,7 +132,17 @@ jobs:
           mkdir cmake-build-frontend-sdl2
           cmake -G "Visual Studio 17 2022" -A "X64" -S "${{ github.workspace }}/frontend-sdl2" -B "${{ github.workspace }}/cmake-build-frontend-sdl2" -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static  -DCMAKE_PREFIX_PATH="${{ github.workspace }}/install-libprojectm" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install-frontend-sdl2" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" -DCMAKE_VERBOSE_MAKEFILE=YES -DSDL2_LINKAGE=static -DBUILD_TESTING=YES
           cmake --build "${{ github.workspace }}/cmake-build-frontend-sdl2" --parallel --config Release
-  #          cmake --install "${{ github.workspace }}/cmake-build-frontend-sdl2" --config Release
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G ZIP
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-buildcheck-windows
+          path: cmake-build-frontend-sdl2/*.zip
 
   build-darwin:
     name: macOS, x86_64
@@ -142,4 +177,14 @@ jobs:
           mkdir cmake-build-frontend-sdl2
           cmake -G Ninja -S "${{ github.workspace }}/frontend-sdl2" -B "${{ github.workspace }}/cmake-build-frontend-sdl2" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ github.workspace }}/install-libprojectm" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}//install-frontend-sdl2"
           cmake --build "${{ github.workspace }}/cmake-build-frontend-sdl2" --parallel
-#          cmake --install "${{ github.workspace }}/cmake-build-frontend-sdl2"
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G TGZ
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-buildcheck-macos
+          path: cmake-build-frontend-sdl2/*.tar.gz

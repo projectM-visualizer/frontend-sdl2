@@ -1,0 +1,167 @@
+# Release workflow for Windows
+# Builds both 32-bit and 64-bit packages for Windows. Uses vcpkg to source all dependencies.
+name: Build Release Package for Windows
+
+on: push
+
+jobs:
+  build-win32:
+    name: Windows, x32
+    runs-on: windows-latest
+
+    steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Checkout libprojectM Sources
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/projectm
+          path: projectm
+          submodules: recursive
+
+      - name: Build/Install libprojectM
+        env:
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+        run: |
+          mkdir cmake-build-libprojectm
+          cmake -G "Visual Studio 17 2022" -A "Win32" `
+            -S "${{ github.workspace }}/projectm" `
+            -B "${{ github.workspace }}/cmake-build-libprojectm" `
+            -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x86-windows `
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install-libprojectm" `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
+            -DBUILD_SHARED_LIBS=ON
+          cmake --build "${{ github.workspace }}/cmake-build-libprojectm" --config Release --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm" --config Release
+
+      - name: Checkout projectMSDL Sources
+        uses: actions/checkout@v4
+        with:
+          path: frontend-sdl2
+          submodules: recursive
+
+      - name: Checkout Cream of the Crop preset pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-cream-of-the-crop
+          path: presets-cream-of-the-crop
+
+      - name: Checkout Milkdrop Texture Pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-milkdrop-texture-pack
+          path: presets-milkdrop-texture-pack
+
+      - name: Build projectMSDL
+        env:
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+        run: |
+          mkdir cmake-build-frontend-sdl2
+          cmake -G "Visual Studio 17 2022" -A "Win32" `
+            -S "${{ github.workspace }}/frontend-sdl2" `
+            -B "${{ github.workspace }}/cmake-build-frontend-sdl2" `
+            -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x86-windows `
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/install-libprojectm" `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
+            -DPRESET_DIRS="${{ github.workspace }}/presets-cream-of-the-crop" `
+            -DTEXTURE_DIRS="${{ github.workspace }}/presets-milkdrop-texture-pack/textures"
+          cmake --build "${{ github.workspace }}/cmake-build-frontend-sdl2" --parallel --config Release
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G ZIP
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-Windows-Portable-x32
+          path: cmake-build-frontend-sdl2/*.zip
+
+  build-win64:
+    name: Windows, x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Checkout libprojectM Sources
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/projectm
+          path: projectm
+          submodules: recursive
+
+      - name: Build/Install libprojectM
+        env:
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+        run: |
+          mkdir cmake-build-libprojectm
+          cmake -G "Visual Studio 17 2022" -A "X64" `
+            -S "${{ github.workspace }}/projectm" `
+            -B "${{ github.workspace }}/cmake-build-libprojectm" `
+            -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install-libprojectm" `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
+            -DBUILD_SHARED_LIBS=ON
+          cmake --build "${{ github.workspace }}/cmake-build-libprojectm" --config Release --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm" --config Release
+
+      - name: Checkout projectMSDL Sources
+        uses: actions/checkout@v4
+        with:
+          path: frontend-sdl2
+          submodules: recursive
+
+      - name: Checkout Cream of the Crop preset pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-cream-of-the-crop
+          path: presets-cream-of-the-crop
+
+      - name: Checkout Milkdrop Texture Pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-milkdrop-texture-pack
+          path: presets-milkdrop-texture-pack
+
+      - name: Build projectMSDL
+        env:
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+        run: |
+          mkdir cmake-build-frontend-sdl2
+          cmake -G "Visual Studio 17 2022" -A "X64" `
+            -S "${{ github.workspace }}/frontend-sdl2" `
+            -B "${{ github.workspace }}/cmake-build-frontend-sdl2" `
+            -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/install-libprojectm" `
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install-frontend-sdl2" `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
+            -DPRESET_DIRS="${{ github.workspace }}/presets-cream-of-the-crop" `
+            -DTEXTURE_DIRS="${{ github.workspace }}/presets-milkdrop-texture-pack/textures"
+          cmake --build "${{ github.workspace }}/cmake-build-frontend-sdl2" --parallel --config Release
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G ZIP
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-Windows-Portable-x64
+          path: cmake-build-frontend-sdl2/*.zip

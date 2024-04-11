@@ -1,0 +1,210 @@
+# Release workflow for Linux
+# Builds a 64-bit binary on Ubuntu 22.04, which should ideally run on most other Linux distros as well.
+# To reduce issues with audio drivers and font rendering, the SDL2 and freetype libraries will be linked as a shared library
+# while POCO  will be linked statically.
+name: Build Release Package for Linux
+
+on: workflow_dispatch
+
+jobs:
+  build-deb:
+    name: DEB Package, Ubuntu Linux 22.04 x86_64
+    runs-on: ubuntu-22.04
+
+    steps:
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt update
+          sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev ninja-build libssl-dev libfreetype6-dev
+
+      # We need to build/link Poco ourselves as static libraries, because Ubuntu Jammy ships with a broken Poco 1.11.0
+      # and other distros may ship different versions as well. POCO as a C++ library has no stable ABI, so each minor
+      # release increments the SO version by one.
+      - name: Checkout Poco Sources
+        uses: actions/checkout@v4
+        with:
+          repository: pocoproject/poco
+          path: poco
+          ref: 'poco-1.13.3'
+          submodules: recursive
+
+      - name: Build Poco
+        run: |
+          mkdir cmake-build-poco
+          cmake -G Ninja -S poco -B cmake-build-poco \
+            -DBUILD_SHARED_LIBS=OFF  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-poco  \
+            -DENABLE_MONGODB=OFF  \
+            -DENABLE_REDIS=OFF  \
+            -DENABLE_PAGECOMPILER=OFF  \
+            -DENABLE_PAGECOMPILER_FILE2PAGE=OFF  \
+            -DENABLE_ACTIVERECORD=OFF  \
+            -DENABLE_ACTIVERECORD_COMPILER=OFF  \
+            -DENABLE_DATA_ODBC=OFF  \
+            -DENABLE_DATA_POSTGRESQL=OFF  \
+            -DENABLE_DATA_MYSQL=OFF  \
+            -DENABLE_JWT=OFF  \
+            -DENABLE_PROMETHEUS=OFF
+          cmake --build cmake-build-poco --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-poco"
+
+      - name: Checkout libprojectM Sources
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/projectm
+          path: projectm
+          submodules: recursive
+
+      - name: Build/Install libprojectM
+        run: |
+          mkdir cmake-build-libprojectm
+          cmake -G Ninja -S projectm -B cmake-build-libprojectm  \
+            -DBUILD_SHARED_LIBS=OFF  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-libprojectm
+          cmake --build cmake-build-libprojectm --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm"
+
+      - name: Checkout frontend-sdl2 Sources
+        uses: actions/checkout@v4
+        with:
+          path: frontend-sdl2
+          submodules: recursive
+
+      - name: Checkout Cream of the Crop preset pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-cream-of-the-crop
+          path: presets-cream-of-the-crop
+
+      - name: Checkout Milkdrop Texture Pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-milkdrop-texture-pack
+          path: presets-milkdrop-texture-pack
+
+      - name: Build frontend-sdl2
+        run: |
+          mkdir cmake-build-frontend-sdl2
+          cmake -G Ninja -S frontend-sdl2 -B cmake-build-frontend-sdl2 \
+            -DCMAKE_BUILD_TYPE=Release \
+            "-DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install-libprojectm;${GITHUB_WORKSPACE}/install-poco" \
+            "-DPRESET_DIRS=${{ github.workspace }}/presets-cream-of-the-crop" \
+            "-DTEXTURE_DIRS=${{ github.workspace }}/presets-milkdrop-texture-pack/textures" \
+            "-DDEFAULT_CONFIG_PATH=/usr/share/projectMSDL/" \
+            "-DDEFAULT_PRESETS_PATH=/usr/share/projectMSDL/presets/" \
+            "-DDEFAULT_TEXTURES_PATH=/usr/share/projectMSDL/textures/"
+          cmake --build cmake-build-frontend-sdl2 --parallel
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G DEB
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-Linux-DEB-x86_64
+          path: cmake-build-frontend-sdl2/*.deb
+
+  build-tgz:
+    name: Portable, Ubuntu Linux 22.04 x86_64
+    runs-on: ubuntu-22.04
+
+    steps:
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt update
+          sudo apt install build-essential libgl1-mesa-dev mesa-common-dev libsdl2-dev libpoco-dev ninja-build libssl-dev libfreetype6-dev
+
+      # We need to build/link Poco ourselves as static libraries, because Ubuntu Jammy ships with a broken Poco 1.11.0
+      # and other distros may ship different versions as well. POCO as a C++ library has no stable ABI, so each minor
+      # release increments the SO version by one.
+      - name: Checkout Poco Sources
+        uses: actions/checkout@v4
+        with:
+          repository: pocoproject/poco
+          path: poco
+          ref: 'poco-1.13.3'
+          submodules: recursive
+
+      - name: Build Poco
+        run: |
+          mkdir cmake-build-poco
+          cmake -G Ninja -S poco -B cmake-build-poco \
+            -DBUILD_SHARED_LIBS=OFF  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-poco  \
+            -DENABLE_MONGODB=OFF  \
+            -DENABLE_REDIS=OFF  \
+            -DENABLE_PAGECOMPILER=OFF  \
+            -DENABLE_PAGECOMPILER_FILE2PAGE=OFF  \
+            -DENABLE_ACTIVERECORD=OFF  \
+            -DENABLE_ACTIVERECORD_COMPILER=OFF  \
+            -DENABLE_DATA_ODBC=OFF  \
+            -DENABLE_DATA_POSTGRESQL=OFF  \
+            -DENABLE_DATA_MYSQL=OFF  \
+            -DENABLE_JWT=OFF  \
+            -DENABLE_PROMETHEUS=OFF
+          cmake --build cmake-build-poco --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-poco"
+
+      - name: Checkout libprojectM Sources
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/projectm
+          path: projectm
+          submodules: recursive
+
+      - name: Build/Install libprojectM
+        run: |
+          mkdir cmake-build-libprojectm
+          cmake -G Ninja -S projectm -B cmake-build-libprojectm  \
+            -DBUILD_SHARED_LIBS=OFF  \
+            -DCMAKE_BUILD_TYPE=Release  \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-libprojectm
+          cmake --build cmake-build-libprojectm --parallel
+          cmake --install "${{ github.workspace }}/cmake-build-libprojectm"
+
+      - name: Checkout frontend-sdl2 Sources
+        uses: actions/checkout@v4
+        with:
+          path: frontend-sdl2
+          submodules: recursive
+
+      - name: Checkout Cream of the Crop preset pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-cream-of-the-crop
+          path: presets-cream-of-the-crop
+
+      - name: Checkout Milkdrop Texture Pack
+        uses: actions/checkout@v4
+        with:
+          repository: projectM-visualizer/presets-milkdrop-texture-pack
+          path: presets-milkdrop-texture-pack
+
+      - name: Build frontend-sdl2
+        run: |
+          mkdir cmake-build-frontend-sdl2
+          cmake -G Ninja -S frontend-sdl2 -B cmake-build-frontend-sdl2 \
+            -DCMAKE_BUILD_TYPE=Release \
+            "-DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install-libprojectm;${GITHUB_WORKSPACE}/install-poco" \
+            "-DPRESET_DIRS=${{ github.workspace }}/presets-cream-of-the-crop" \
+            "-DTEXTURE_DIRS=${{ github.workspace }}/presets-milkdrop-texture-pack/textures" \
+            -DENABLE_FLAT_PACKAGE=ON
+          cmake --build cmake-build-frontend-sdl2 --parallel
+
+      - name: Package projectMSDL
+        run: |
+          cd cmake-build-frontend-sdl2
+          cpack -G TGZ
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: projectMSDL-Linux-Standalone-x86_64
+          path: cmake-build-frontend-sdl2/*.tar.gz

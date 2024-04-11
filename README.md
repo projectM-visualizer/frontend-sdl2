@@ -1,6 +1,6 @@
 # ProjectM SDL2 Frontend
 
-This is a reference implementation of an applicatiaon that makes use of the projectM music visualization library.
+This is a reference implementation of an application that makes use of the projectM music visualization library.
 
 It will listen to audio input and produce mesmerizing visuals. Some commands are supported.
 
