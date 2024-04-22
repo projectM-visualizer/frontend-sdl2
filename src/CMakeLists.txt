@@ -43,6 +43,14 @@ else()
             )
 endif()
 
+# GLEW needs to be initialized if libprojectM depends on it.
+if(TARGET GLEW::glew OR TARGET GLEW::glew_s)
+    target_compile_definitions(projectMSDL
+            PRIVATE
+            USE_GLEW
+            )
+endif()
+
 set_source_files_properties(ProjectMSDLApplication.cpp PROPERTIES
         COMPILE_DEFINITIONS PROJECTMSDL_CONFIG_LOCATION=\"${DEFAULT_CONFIG_PATH}\"
         )

@@ -8,6 +8,10 @@
 
 #include <Poco/Util/Application.h>
 
+#ifdef USE_GLEW
+#include <GL/glew.h>
+#endif
+
 #include <SDL2/SDL_opengl.h>
 
 const char* SDLRenderingWindow::name() const
@@ -265,6 +269,18 @@ void SDLRenderingWindow::CreateSDLWindow()
     SDL_SetWindowTitle(_renderingWindow, "projectM");
     SDL_GL_MakeCurrent(_renderingWindow, _glContext);
     UpdateSwapInterval();
+
+#ifdef USE_GLEW
+    auto glewError = glewInit();
+    if (glewError != GLEW_OK)
+    {
+        auto errorMessage = "Could not initialize GLEW. Error: " + std::string(reinterpret_cast<const char*>(glewGetErrorString(glewError)));
+        poco_fatal(_logger, errorMessage);
+        throw Poco::Exception(errorMessage);
+    }
+
+    poco_debug_f1(_logger, "Initialized GLEW: %s", std::string(reinterpret_cast<const char*>(glewGetString(GLEW_VERSION))));
+#endif
 
     if (_config->getBool("fullscreen", false))
     {
