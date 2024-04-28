@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Create new issue
+    url: https://github.com/projectM-visualizer/projectm/issues/new/choose
+    about: Please open new issues in the main projectM repository. We will then move the issue into the correct repository for you.
