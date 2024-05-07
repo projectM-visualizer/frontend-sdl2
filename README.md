@@ -39,11 +39,13 @@ vcpkg install sdl2 poco freetype # Windows, should be pulled in automatically vi
 
 ### Configure and build projectMSDL
 
-After cloning or updating the Git repository, always remember to update or initialize the submodules as well. this is
+After cloning or updating the Git repository, always remember to initialize and update the submodules as well. this is
 not required when building from a release tarball or ZIP.
 
 ```shell
-git submodule --init update
+# Newer git versions also support "git submodule update --init" to perform both step in a single command.
+git submodule init
+git submodule update
 ```
 
 If all dependencies are in the CMake and/or the system search directories, you can configure and build the application
