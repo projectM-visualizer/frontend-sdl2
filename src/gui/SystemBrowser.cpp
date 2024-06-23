@@ -1,8 +1,8 @@
 #include "SystemBrowser.h"
 
-#ifdef __MSC_VER__
-#include <shellapi.h>
+#ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
 #endif
 #ifdef __linux__
 #include <Poco/Process.h>
@@ -15,7 +15,7 @@
 void SystemBrowser::OpenURL(const std::string& url)
 {
 #ifdef __MSC_VER__
-    ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
+    ShellExecuteA(nullptr, nullptr, url.c_str(), nullptr, nullptr, SW_SHOW);
 #endif
 #ifdef __linux__
     auto handle = Poco::Process::launch("xdg-open", {url});
