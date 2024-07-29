@@ -62,6 +62,30 @@ protected:
     void MouseUpEvent(const SDL_MouseButtonEvent& event);
 
     /**
+     * @brief Handles SDL game controller add events (plugin in a new controller) events.
+     * @param id The added controller id
+     */
+    void ControllerAdd( int id );
+
+    /**
+     * @brief Handles SDL game controller remove events.
+     * @param id The removed controller id
+     */
+    void ControllerRemove( int id );
+
+    /**
+     * @brief Handles SDL game controller button down events.
+     * @param event The controller button event
+     */
+    void ControllerDownEvent(const SDL_Event& event);
+
+    /**
+     * @brief Handles SDL game controller button up events.
+     * @param event The controller button event
+     */
+    void ControllerUpEvent(const SDL_Event& event);
+
+    /**
      * @brief Handler for quit notifications.
      * @param notification The received notification.
      */
@@ -88,4 +112,6 @@ protected:
     ModifierKeyStates _keyStates; //!< Current "pressed" states of modifier keys
 
     Poco::Logger& _logger{Poco::Logger::get("RenderLoop")}; //!< The class logger.
+
+    SDL_GameController *_controller;
 };

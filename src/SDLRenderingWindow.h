@@ -96,6 +96,12 @@ public:
 
     SDL_GLContext GetGlContext() const;
 
+    /**
+     * @brief Returns the ID of the first game controller found
+     * @return SDL_GameController * Returns a gamecontroller identifier or NULL
+     */
+    SDL_GameController* FindController();
+
 protected:
 
     /**

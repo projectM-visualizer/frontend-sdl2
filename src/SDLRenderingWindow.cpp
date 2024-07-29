@@ -196,7 +196,7 @@ void SDLRenderingWindow::NextDisplay()
 
 void SDLRenderingWindow::CreateSDLWindow()
 {
-    SDL_InitSubSystem(SDL_INIT_VIDEO);
+    SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 
     int width{_config->getInt("width", 800)};
     int height{_config->getInt("height", 600)};
@@ -307,7 +307,7 @@ void SDLRenderingWindow::DestroySDLWindow()
     SDL_DestroyWindow(_renderingWindow);
     _renderingWindow = nullptr;
 
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 }
 
 void SDLRenderingWindow::DumpOpenGLInfo()
@@ -460,4 +460,22 @@ void SDLRenderingWindow::OnConfigurationPropertyRemoved(const std::string& key)
     {
         UpdateWindowTitle();
     }
+}
+
+SDL_GameController* SDLRenderingWindow::FindController() {
+    //Check for joysticks
+    if( SDL_NumJoysticks() < 1 )
+    {
+        poco_debug(_logger, "No joysticks connected");
+    }
+
+    //For simplicity, we’ll only be setting up and tracking a single
+    //controller at a time
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        if (SDL_IsGameController(i)) {
+            return SDL_GameControllerOpen(i);
+        }
+    }
+
+    return nullptr;
 }
