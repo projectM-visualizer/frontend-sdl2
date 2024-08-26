@@ -30,8 +30,6 @@ void RenderLoop::Run()
 
     _projectMWrapper.DisplayInitialPreset();
 
-    _controller = _sdlRenderingWindow.FindController();
-
     while (!_wantsToQuit)
     {
         limiter.TargetFPS(_projectMWrapper.TargetFPS());
@@ -50,10 +48,6 @@ void RenderLoop::Run()
         // Pass projectM the actual FPS value of the last frame.
         _projectMWrapper.UpdateRealFPS(limiter.FPS());
     }
-
-    //Close game controller
-    SDL_GameControllerClose(_controller);
-    _controller = nullptr;
 
     notificationCenter.removeObserver(_quitNotificationObserver);
 
@@ -110,12 +104,14 @@ void RenderLoop::PollEvents()
                 break;
 
             case SDL_CONTROLLERDEVICEADDED:
-                ControllerAdd(event.cdevice.which);
+                poco_debug(_logger, "Controller added event received");
+                _sdlRenderingWindow.ControllerAdd(event.cdevice.which);
 
                 break;
 
             case SDL_CONTROLLERDEVICEREMOVED:
-                ControllerRemove(event.cdevice.which);
+                poco_debug(_logger, "Controller remove event received");
+                _sdlRenderingWindow.ControllerRemove(event.cdevice.which);
 
                 break;
 
@@ -350,30 +346,10 @@ void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
     }
 }
 
-void RenderLoop::ControllerAdd(const int id )
-{
-    if (!_controller)
-    {
-        _controller = SDL_GameControllerOpen(id);
-    }
-    poco_debug(_logger, "Controller added!");
-}
-
-void RenderLoop::ControllerRemove(const int id )
-{
-    if (_controller && id == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(_controller)))
-    {
-        SDL_GameControllerClose(_controller);
-        _controller = _sdlRenderingWindow.FindController();
-    }
-    poco_debug(_logger, "Controller removed!");
-}
-
 void RenderLoop::ControllerDownEvent(const SDL_Event& event)
 {
-    if (!_controller || event.cdevice.which != SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(_controller)))
+    if (!_sdlRenderingWindow.ControllerIsOurs(event.cdevice.which) )
     {
-        poco_debug(_logger, "No controller initialized");
         return;
     }
 

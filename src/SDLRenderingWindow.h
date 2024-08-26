@@ -102,6 +102,24 @@ public:
      */
     SDL_GameController* FindController();
 
+    /**
+     * @brief Handles SDL game controller add events (plugin in a new controller) events.
+     * @param id The added controller id
+     */
+    void ControllerAdd(const int id );
+
+    /**
+     * @brief Handles SDL game controller remove events.
+     * @param id The removed controller id
+     */
+    void ControllerRemove(const int id );
+
+    /**
+     * @brief Returns true if the given controller is initialized and the one we currently use.
+     * @param id The removed controller id
+     */
+    bool ControllerIsOurs(const int id );
+
 protected:
 
     /**
@@ -162,6 +180,7 @@ protected:
 
     bool _fullscreen{ false };
 
+    SDL_GameController *_controller;
 };
 
 

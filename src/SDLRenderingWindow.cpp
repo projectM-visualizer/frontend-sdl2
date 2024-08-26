@@ -35,6 +35,8 @@ void SDLRenderingWindow::initialize(Poco::Util::Application& app)
     // Observe user configuration changes (set via the settings window)
     _userConfig->propertyChanged += Poco::delegate(this, &SDLRenderingWindow::OnConfigurationPropertyChanged);
     _userConfig->propertyRemoved += Poco::delegate(this, &SDLRenderingWindow::OnConfigurationPropertyRemoved);
+
+    _controller = FindController();
 }
 
 void SDLRenderingWindow::uninitialize()
@@ -47,6 +49,12 @@ void SDLRenderingWindow::uninitialize()
     {
         DestroySDLWindow();
         _renderingWindow = nullptr;
+    }
+
+    if (_controller)
+    {
+        SDL_GameControllerClose(_controller);
+        _controller = nullptr;
     }
 }
 
@@ -467,15 +475,63 @@ SDL_GameController* SDLRenderingWindow::FindController() {
     if( SDL_NumJoysticks() < 1 )
     {
         poco_debug(_logger, "No joysticks connected");
+        return nullptr;
     }
 
     //For simplicity, we’ll only be setting up and tracking a single
     //controller at a time
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
+            poco_debug(_logger, "Adding first controller");
             return SDL_GameControllerOpen(i);
+        }
+        else {
+            poco_debug(_logger, "Connected joystick is not a SDL game controller");
         }
     }
 
     return nullptr;
+}
+
+void SDLRenderingWindow::ControllerAdd(const int id )
+{
+    if (!_controller)
+    {
+        if (SDL_IsGameController(id)) {
+            _controller = SDL_GameControllerOpen(id);
+            poco_debug(_logger, "Controller added!");
+        }
+        else {
+            poco_debug(_logger, "Connected joystick is not a SDL game controller");
+        }
+    }
+}
+
+void SDLRenderingWindow::ControllerRemove(const int id )
+{
+    if (_controller && id == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(_controller)))
+    {
+        SDL_GameControllerClose(_controller);
+        poco_debug(_logger, "Controller removed!");
+        _controller = FindController();
+    }
+}
+
+bool SDLRenderingWindow::ControllerIsOurs(const int id )
+{
+    int instance = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(_controller));
+
+    if (!_controller )
+    {
+        poco_debug(_logger, "No controller initialized");
+        return false;
+    }
+
+    if (id != instance)
+    {
+        poco_debug_f2(_logger, "Use controller %?d instead of %?d. Currently only one controller is supported", instance, id);
+        return false;
+    }
+
+    return true;
 }
