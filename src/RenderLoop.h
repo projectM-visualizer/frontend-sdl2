@@ -62,6 +62,18 @@ protected:
     void MouseUpEvent(const SDL_MouseButtonEvent& event);
 
     /**
+     * @brief Handles SDL game controller button down events.
+     * @param event The controller button event
+     */
+    void ControllerDownEvent(const SDL_Event& event);
+
+    /**
+     * @brief Handles SDL game controller button up events.
+     * @param event The controller button event
+     */
+    void ControllerUpEvent(const SDL_Event& event);
+
+    /**
      * @brief Handler for quit notifications.
      * @param notification The received notification.
      */

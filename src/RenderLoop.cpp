@@ -103,6 +103,28 @@ void RenderLoop::PollEvents()
 
                 break;
 
+            case SDL_CONTROLLERDEVICEADDED:
+                poco_debug(_logger, "Controller added event received");
+                _sdlRenderingWindow.ControllerAdd(event.cdevice.which);
+
+                break;
+
+            case SDL_CONTROLLERDEVICEREMOVED:
+                poco_debug(_logger, "Controller remove event received");
+                _sdlRenderingWindow.ControllerRemove(event.cdevice.which);
+
+                break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+                ControllerDownEvent(event);
+
+                break;
+
+            case SDL_CONTROLLERBUTTONUP:
+                ControllerUpEvent(event);
+
+                break;
+
             case SDL_QUIT:
                 _wantsToQuit = true;
                 break;
@@ -322,6 +344,90 @@ void RenderLoop::MouseUpEvent(const SDL_MouseButtonEvent& event)
     {
         _mouseDown = false;
     }
+}
+
+void RenderLoop::ControllerDownEvent(const SDL_Event& event)
+{
+    if (!_sdlRenderingWindow.ControllerIsOurs(event.cdevice.which) )
+    {
+        return;
+    }
+
+    switch (event.cbutton.button)
+    {
+        case SDL_CONTROLLER_BUTTON_A:
+            _sdlRenderingWindow.ToggleFullscreen();
+            poco_debug(_logger, "A pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_B:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::RandomPreset, _keyStates._shiftPressed));
+            poco_debug(_logger, "B pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_X:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::TogglePresetLocked));
+            poco_debug(_logger, "X pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_Y:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::ToggleShuffle));
+            poco_debug(_logger, "Y pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_BACK:
+            _wantsToQuit = true;
+            poco_debug(_logger, "Back pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_GUIDE:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::LastPreset, _keyStates._shiftPressed));
+            poco_debug(_logger, "Guide pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_START:
+            _projectMGui.Toggle();
+            _sdlRenderingWindow.ShowCursor(_projectMGui.Visible());
+            poco_debug(_logger, "Start pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+            _audioCapture.NextAudioDevice();
+            poco_debug(_logger, "Shoulder left pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+            _sdlRenderingWindow.NextDisplay();
+            poco_debug(_logger, "Shoulder right pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            // Increase beat sensitivity
+            _projectMWrapper.ChangeBeatSensitivity(0.05f);
+            poco_debug(_logger, "DPad up pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            // Decrease beat sensitivity
+            _projectMWrapper.ChangeBeatSensitivity(-0.05f);
+            poco_debug(_logger, "DPad down pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::PreviousPreset, _keyStates._shiftPressed));
+            poco_debug(_logger, "DPad left pressed!");
+            break;
+
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            Poco::NotificationCenter::defaultCenter().postNotification(new PlaybackControlNotification(PlaybackControlNotification::Action::NextPreset, _keyStates._shiftPressed));
+            poco_debug(_logger, "DPad right pressed!");
+            break;
+    }
+}
+
+void RenderLoop::ControllerUpEvent(const SDL_Event& event)
+{
+
 }
 
 void RenderLoop::QuitNotificationHandler(const Poco::AutoPtr<QuitNotification>& notification)

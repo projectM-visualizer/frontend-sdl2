@@ -7,6 +7,28 @@ It will listen to audio input and produce mesmerizing visuals. Some commands are
 This project is in a bit of a transition state and is in the process of being modernized. There are many rough edges at
 present.
 
+## GUI controls
+
+
+| Command | Keyboard | Mouse | Game Controller |
+| --- | --- | --- | --- |
+| Add a new waveform | | `ctrl` + Left |  |
+| Clear all custom waveforms | | Middle |  |
+| Toggle full screen | `ctrl` + `f` | Right | A |
+| Show/hide GUI | `esc` |  | Start |
+| Random preset | `r` |  | B |
+| Next preset | `n` |  | D-Pad right |
+| Previous preset | `p` |  | D-Pad left |
+| Increase beat sensitivity | `Up` | Wheel up | D-Pad up |
+| Decrease beat sensitivity | `Down` | Wheel down | D-Pad down |
+| Toggle shuffle | `y` |  | Y |
+| Last preset | `Backspace` |  | Guide |
+| TogglePresetLocked | `Space` |  | X |
+| NextAudioDevice | `ctrl` + `i` |  | Shoulder left |
+| NextDisplay | `ctrl` + `m` |  | Shoulder right |
+| Toggle aspect ratio correction | `a` |  |  |
+| Quit | `q` |  | Back |
+
 ## Building from source
 
 ### Build and install libprojectM
