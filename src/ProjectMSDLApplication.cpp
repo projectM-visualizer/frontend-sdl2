@@ -5,6 +5,9 @@
 #include "ProjectMSDLApplication.h"
 
 #include "AudioCapture.h"
+#ifdef ENABLE_CONTROL_SOCKET
+#include "ControlSocket.h"
+#endif
 #include "ProjectMWrapper.h"
 #include "RenderLoop.h"
 #include "SDLRenderingWindow.h"
@@ -26,6 +29,9 @@ ProjectMSDLApplication::ProjectMSDLApplication()
     addSubsystem(new ProjectMWrapper);
     addSubsystem(new AudioCapture);
     addSubsystem(new ProjectMGUI);
+#ifdef ENABLE_CONTROL_SOCKET
+    addSubsystem(new ControlSocket);
+#endif
 }
 
 const char* ProjectMSDLApplication::name() const
@@ -233,6 +239,16 @@ void ProjectMSDLApplication::defineOptions(Poco::Util::OptionSet& options)
     options.addOption(Option("beatSensitivity", "", "Beat sensitivity. Between 0.0 and 2.0. Default 1.0.",
                              false, "<number>", true)
                           .binding("projectM.beatSensitivity", _commandLineOverrides));
+
+#ifdef ENABLE_CONTROL_SOCKET
+    options.addOption(Option("controlSocket", "", "Enable the control socket for external application control. Disabled by default. UNIX platforms only.",
+                             false, "<0/1>", true)
+                          .binding("controlSocket.enabled", _commandLineOverrides));
+
+    options.addOption(Option("controlSocketPath", "", "Path of the control socket. Defaults to $XDG_RUNTIME_DIR/projectMSDL.sock.",
+                             false, "<path>", true)
+                          .binding("controlSocket.path", _commandLineOverrides));
+#endif
 }
 
 int ProjectMSDLApplication::main(POCO_UNUSED const std::vector<std::string>& args)

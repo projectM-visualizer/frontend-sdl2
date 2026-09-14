@@ -101,6 +101,19 @@ projectM.hardCutDuration = 20
 projectM.aspectCorrectionEnabled = true
 
 
+### Control socket settings
+
+# If enabled, projectMSDL creates a UNIX domain socket on startup that can be used to control
+# the application (preset navigation, shuffle/lock toggles, preset selection and state queries)
+# from external tools. Clients exchange newline-delimited JSON messages.
+# Only available on UNIX platforms. Disabled by default; can also be toggled with the --controlSocket command-line option.
+controlSocket.enabled = false
+
+# Path of the UNIX domain socket. If left unset, it defaults to $XDG_RUNTIME_DIR/projectMSDL.sock
+# (falling back to /tmp/projectMSDL.sock if XDG_RUNTIME_DIR is not defined).
+#controlSocket.path = /run/user/1000/projectMSDL.sock
+
+
 ### Logging settings
 
 # For detailed information on how to configure logging, please refer to the POCO documentation:

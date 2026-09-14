@@ -16,6 +16,9 @@ RenderLoop::RenderLoop()
     : _audioCapture(Poco::Util::Application::instance().getSubsystem<AudioCapture>())
     , _projectMWrapper(Poco::Util::Application::instance().getSubsystem<ProjectMWrapper>())
     , _sdlRenderingWindow(Poco::Util::Application::instance().getSubsystem<SDLRenderingWindow>())
+#ifdef ENABLE_CONTROL_SOCKET
+    , _controlSocket(Poco::Util::Application::instance().getSubsystem<ControlSocket>())
+#endif
     , _projectMHandle(_projectMWrapper.ProjectM())
     , _playlistHandle(_projectMWrapper.Playlist())
     , _projectMGui(Poco::Util::Application::instance().getSubsystem<ProjectMGUI>())
@@ -39,6 +42,9 @@ void RenderLoop::Run()
         limiter.StartFrame();
 
         PollEvents();
+#ifdef ENABLE_CONTROL_SOCKET
+        _controlSocket.ProcessPendingCommands();
+#endif
         CheckViewportSize();
         _audioCapture.FillBuffer();
         _projectMWrapper.RenderFrame();

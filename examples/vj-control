@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#
+# vj-control.sh — drive projectMSDL over its UNIX control socket and render a
+# 3-line button face (icon / name / status) suitable for a Stream Deck.
+#
+# Usage:
+#   vj-control next        Advance to the next preset.
+#   vj-control last         Return to the previously displayed preset.
+#   vj-control random       Jump to a random preset.
+#   vj-control shuffle      Toggle shuffle mode.
+#   vj-control lock         Toggle the preset lock.
+#
+# Output is always exactly three lines on stdout:
+#   1. an operation icon (Nerd Font glyph; for shuffle/lock it reflects the new state)
+#   2. the function name
+#   3. a status icon — ok (check) or error (cross)
+#
+# Environment:
+#   VJ_CONTROL_SOCKET   Path to the control socket. Defaults to
+#                       $XDG_RUNTIME_DIR/projectMSDL.sock, then /tmp/projectMSDL.sock.
+
+set -u
+
+# --- Nerd Font glyphs (FontAwesome range, present in any Nerd Font) -----------
+ICON_NEXT=$''        # step-forward
+ICON_LAST=$''        # rotate-left / undo
+ICON_RANDOM=$''      # dice (jump to a random preset)
+ICON_SHUFFLE_ON=$''  # random
+ICON_SHUFFLE_OFF=$'' # long-arrow-right (sequential)
+ICON_LOCK_ON=$''     # lock (closed)
+ICON_LOCK_OFF=$''    # unlock (open)
+ICON_OFFLINE=$''     # broken chain (cannot reach projectMSDL)
+
+# --- Result-line status icons -------------------------------------------------
+ICON_OK=$''          # check-circle
+ICON_ERR=$''         # times-circle
+
+# --- Socket resolution --------------------------------------------------------
+resolve_socket() {
+    if [[ -n "${VJ_CONTROL_SOCKET:-}" ]]; then
+        printf '%s' "$VJ_CONTROL_SOCKET"
+        return
+    fi
+    if [[ -n "${XDG_RUNTIME_DIR:-}" && -S "$XDG_RUNTIME_DIR/projectMSDL.sock" ]]; then
+        printf '%s' "$XDG_RUNTIME_DIR/projectMSDL.sock"
+        return
+    fi
+    printf '%s' "/tmp/projectMSDL.sock"
+}
+
+SOCK="$(resolve_socket)"
+
+# --- Dependencies -------------------------------------------------------------
+need() {
+    command -v "$1" >/dev/null 2>&1 || { echo "vj-control: missing dependency '$1'" >&2; exit 127; }
+}
+need jq
+
+# Pick a transport that can speak to a UNIX stream socket.
+if command -v socat >/dev/null 2>&1; then
+    send() { printf '%s\n' "$1" | socat -t2 - "UNIX-CONNECT:$SOCK" 2>/dev/null; }
+elif command -v ncat >/dev/null 2>&1; then
+    send() { printf '%s\n' "$1" | ncat -U -w2 "$SOCK" 2>/dev/null; }
+elif command -v nc >/dev/null 2>&1; then
+    send() { printf '%s\n' "$1" | nc -U -q2 "$SOCK" 2>/dev/null; }
+else
+    echo "vj-control: need one of socat, ncat or nc (with -U support)" >&2
+    exit 127
+fi
+
+# --- Rendering ----------------------------------------------------------------
+# Emit the three button lines and exit: <operation icon> / <name> / <status icon>.
+render() {
+    printf '%s\n%s\n%s\n' "$1" "$2" "$3"
+    exit 0
+}
+
+usage() {
+    cat >&2 <<'EOF'
+Usage: vj-control {next|last|random|shuffle|lock}
+EOF
+    exit 2
+}
+
+# --- Dispatch -----------------------------------------------------------------
+cmd="${1:-}"
+case "$cmd" in
+    next)    label="NXT"; request='{"command":"next"}'    ;;
+    last)    label="PRV"; request='{"command":"last"}'    ;;
+    random)  label="RND"; request='{"command":"random"}'  ;;
+    shuffle) label="SHF"; request='{"command":"shuffle"}' ;;
+    lock)    label="LCK"; request='{"command":"lock"}'    ;;
+    -h|--help|help|"") usage ;;
+    *) echo "vj-control: unknown function '$cmd'" >&2; usage ;;
+esac
+
+reply="$(send "$request")"
+
+# No reply at all → projectMSDL is not running / socket unreachable.
+if [[ -z "$reply" ]]; then
+    render "$ICON_OFFLINE" "$label" "$ICON_ERR"
+fi
+
+status="$(printf '%s' "$reply" | jq -r '.status // "error"' 2>/dev/null)"
+
+# Choose the operation icon (line 1). For shuffle/lock it reflects the new state.
+case "$cmd" in
+    next)   icon="$ICON_NEXT" ;;
+    last)   icon="$ICON_LAST" ;;
+    random) icon="$ICON_RANDOM" ;;
+    shuffle)
+        if [[ "$(printf '%s' "$reply" | jq -r '.shuffle' 2>/dev/null)" == "true" ]]; then
+            icon="$ICON_SHUFFLE_ON"
+        else
+            icon="$ICON_SHUFFLE_OFF"
+        fi
+        ;;
+    lock)
+        if [[ "$(printf '%s' "$reply" | jq -r '.locked' 2>/dev/null)" == "true" ]]; then
+            icon="$ICON_LOCK_ON"
+        else
+            icon="$ICON_LOCK_OFF"
+        fi
+        ;;
+esac
+
+# Status icon (line 3).
+if [[ "$status" == "ok" ]]; then
+    render "$icon" "$label" "$ICON_OK"
+else
+    render "$icon" "$label" "$ICON_ERR"
+fi

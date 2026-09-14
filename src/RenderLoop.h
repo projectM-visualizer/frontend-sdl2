@@ -1,6 +1,9 @@
 #pragma once
 
 #include "AudioCapture.h"
+#ifdef ENABLE_CONTROL_SOCKET
+#include "ControlSocket.h"
+#endif
 #include "ProjectMWrapper.h"
 #include "SDLRenderingWindow.h"
 
@@ -75,6 +78,9 @@ protected:
     AudioCapture& _audioCapture;
     ProjectMWrapper& _projectMWrapper;
     SDLRenderingWindow& _sdlRenderingWindow;
+#ifdef ENABLE_CONTROL_SOCKET
+    ControlSocket& _controlSocket;
+#endif
 
     projectm_handle _projectMHandle{nullptr};
     projectm_playlist_handle _playlistHandle{nullptr};

@@ -16,6 +16,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 option(ENABLE_FLAT_PACKAGE "Creates a \"flat\" install layout with the executable, configuration file(s) and preset/texture dirs directly in the install prefix." OFF)
 option(ENABLE_INSTALL_BDEPS "Installs all shared libraries projectMSDL requires to run. On some platforms, CMake 3.31 or higher is required for this to work!" OFF)
 option(ENABLE_GLES "Build the application to use OpenGL ES instead of Core GL. May not work on all platforms and requires CMake 3.27 or higher." OFF)
+option(ENABLE_CONTROL_SOCKET "Build the UNIX-domain control socket for external application control. UNIX platforms only." OFF)
 
 set(PROJECTMSDL_PROPERTIES_FILENAME "projectMSDL.properties")
 
@@ -133,6 +134,7 @@ if(NOT PACKAGING_CONFIG_FILE STREQUAL "")
     include(${PACKAGING_CONFIG_FILE})
 endif()
 
+message(STATUS "Control socket: ${ENABLE_CONTROL_SOCKET}")
 message(STATUS "SDL version: ${SDL2_VERSION}")
 message(STATUS "Poco version: ${Poco_VERSION}")
 message(STATUS "projectM version: ${projectM4_VERSION}")

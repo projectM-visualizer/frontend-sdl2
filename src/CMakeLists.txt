@@ -110,6 +110,22 @@ target_compile_definitions(projectMSDL
         PROJECTMSDL_VERSION="${PROJECT_VERSION}"
         )
 
+if (ENABLE_CONTROL_SOCKET)
+    target_sources(projectMSDL
+            PRIVATE
+            ControlSocket.cpp
+            ControlSocket.h
+            )
+    target_compile_definitions(projectMSDL
+            PRIVATE
+            ENABLE_CONTROL_SOCKET
+            )
+    target_link_libraries(projectMSDL
+            PRIVATE
+            Poco::JSON
+            )
+endif ()
+
 target_link_libraries(projectMSDL
         PRIVATE
         ProjectMSDL-GUI
